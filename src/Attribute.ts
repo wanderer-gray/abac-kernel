@@ -1,19 +1,12 @@
 import { type } from './utils'
 import * as Schema from './Schema'
-
-type TData = type.TObject
-type TValue = type.TSupport
-
-type TName = type.TString
-type TPath = type.TArray<type.TString>
-type TSchema = Schema.TSchema
-type TComputer = (data: TData) => Promise<TValue>
+import { Context } from './context'
 
 export class Attribute {
-  readonly name: TName
-  private readonly path: TPath
-  private readonly schema: TSchema
-  private readonly computer?: TComputer
+  readonly name: type.TString
+  private readonly path: type.TArray<type.TString>
+  private readonly schema: Schema.TSchema
+  private readonly computer?: (data: type.TObject) => Promise<type.TSupport>
 
   constructor ({
     name,
@@ -21,10 +14,10 @@ export class Attribute {
     schema,
     computer
   }: {
-    name: TName,
-    path: TPath,
-    schema: TSchema,
-    computer?: TComputer
+    name: type.TString,
+    path: type.TArray<type.TString>,
+    schema: Schema.TSchema,
+    computer?: (data: type.TObject) => Promise<type.TSupport>
   }) {
     this.name = name
     this.path = path
@@ -36,14 +29,14 @@ export class Attribute {
     throw new Error(`Argument[${this.name}]: ${message}`)
   }
 
-  private assertValue (value: TValue) {
+  private assertValue (value: type.TSupport) {
     if (!Schema.verify(value, this.schema)) {
       this.error(`Invalid value: ${value}`)
     }
   }
 
-  private getByPath (data: TData) {
-    let value: TValue = data
+  private getByPath (data: type.TObject) {
+    let value: type.TSupport = data
 
     for (const key of this.path) {
       if (!type.isObject(value)) {
@@ -56,7 +49,7 @@ export class Attribute {
     return { ok: true, value }
   }
 
-  private async getByComputer (data: TData) {
+  private async getByComputer (data: type.TObject) {
     const { computer } = this
 
     if (!computer) {
@@ -72,7 +65,9 @@ export class Attribute {
     }
   }
 
-  private async getValue (data: TData) {
+  private async getValue (context: Context) {
+    const data = context.getData()
+
     const valueByPath = this.getByPath(data)
 
     if (valueByPath.ok) {
@@ -88,8 +83,8 @@ export class Attribute {
     return null
   }
 
-  async get (data: TData) {
-    const value = await this.getValue(data)
+  async get (context: Context) {
+    const value = await this.getValue(context)
 
     this.assertValue(value)
 

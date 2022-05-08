@@ -1,19 +1,38 @@
+import { type } from './utils'
 import { ABAC } from './ABAC'
-import { SuppType } from './common'
-
-export type Data = {[attr: string]: SuppType}
+import { Namespace } from './Namespace'
 
 export class Context {
-  readonly abac: ABAC
-  private readonly data: Data
+  private readonly data: type.TObject
 
-  constructor (abac: ABAC, data: Data) {
-    this.abac = abac
+  private namespace: Namespace
+
+  constructor ({
+    abac,
+    data
+  }: {
+    abac: ABAC,
+    data: type.TObject
+  }) {
     this.data = data
+
+    this.namespace = abac.defaultNamespace
   }
 
-  getAttr (attr: string) : SuppType {
-    return this.data[attr] ?? null
+  getData () {
+    return this.data
+  }
+
+  setNamespace (namespace: Namespace) {
+    this.namespace = namespace
+  }
+
+  getAttribute (name: string) {
+    return this.namespace.getAttribute(name)
+  }
+
+  getFunction (name: string) {
+    return this.namespace.getFunction(name)
   }
 
   then () {

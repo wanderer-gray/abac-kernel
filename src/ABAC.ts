@@ -1,9 +1,10 @@
+import { type } from './utils'
 import { Namespace } from './Namespace'
 import { PolicySet } from './PolicySet'
-import { Data, Context } from './Context'
+import { Context } from './Context'
 
 export class ABAC {
-  private readonly defaultNamespace: Namespace
+  readonly defaultNamespace: Namespace
   private readonly namespaces: Map<string, Namespace> = new Map()
   private readonly policySets: Map<string, PolicySet> = new Map()
 
@@ -64,7 +65,10 @@ export class ABAC {
     return this
   }
 
-  Context (data: Data) {
-    return new Context(this, data)
+  Context (data: type.TObject) {
+    return new Context({
+      abac: this,
+      data
+    })
   }
 }

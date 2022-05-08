@@ -2,17 +2,17 @@ import { ParserExpression } from './ParserExpression'
 
 export class Parser extends ParserExpression {
   Parse () {
-    const expression = this.getExpression()
+    const ast = this.getExpression()
 
-    if (!expression) {
-      this.error('Expected expression')
+    if (!ast) {
+      this.error('Expected ast')
     }
 
     if (!this.eof()) {
       this.error('Expected EOF')
     }
 
-    return expression
+    return ast
   }
 
   static Parse (source: string) {

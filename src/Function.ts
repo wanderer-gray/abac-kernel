@@ -1,19 +1,11 @@
 import { type } from './utils'
 import * as Schema from './Schema'
 
-type TArgs = type.TSupport[]
-type TResult = type.TSupport
-
-type TName = type.TString
-type TInput = { schema: Schema.TSchema }[]
-type TOutput = { schema: Schema.TSchema }
-type TExecutor = (...args: TArgs) => Promise<TResult>
-
 export class Function {
-  readonly name: TName
-  private readonly input: TInput
-  private readonly output: TOutput
-  private readonly executor: TExecutor
+  readonly name: type.TString
+  private readonly input: { schema: Schema.TSchema }[]
+  private readonly output: { schema: Schema.TSchema }
+  private readonly executor: (...args: type.TSupport[]) => Promise<type.TSupport>
 
   constructor ({
     name,
@@ -21,10 +13,10 @@ export class Function {
     output,
     executor
   }: {
-    name: TName,
-    input: TInput,
-    output: TOutput,
-    executor: TExecutor
+    name: type.TString,
+    input: { schema: Schema.TSchema }[],
+    output: { schema: Schema.TSchema },
+    executor: (...args: type.TSupport[]) => Promise<type.TSupport>
   }) {
     this.name = name
     this.input = input
@@ -36,7 +28,7 @@ export class Function {
     throw new Error(`Function[${this.name}]: ${message}`)
   }
 
-  private assertArgs (args: TArgs) {
+  private assertArgs (args: type.TSupport[]) {
     const { input } = this
 
     if (args.length !== input.length) {
@@ -52,13 +44,13 @@ export class Function {
     }
   }
 
-  private assertResult (result: TResult) {
+  private assertResult (result: type.TSupport) {
     if (!Schema.verify(result, this.output.schema)) {
       this.error(`Invalid result: ${result}`)
     }
   }
 
-  private async getResult (args: TArgs) {
+  private async getResult (args: type.TSupport[]) {
     try {
       return await this.executor.apply(undefined, args)
     } catch {
@@ -66,7 +58,7 @@ export class Function {
     }
   }
 
-  async execute (args: TArgs) {
+  async exec (args: type.TSupport[]) {
     this.assertArgs(args)
 
     const result = await this.getResult(args)

@@ -2,10 +2,8 @@ import { type } from './utils'
 import { Attribute } from './Attribute'
 import { Function } from './Function'
 
-type TName = type.TString
-
 export class Namespace {
-  readonly name: TName
+  readonly name: type.TString
   private readonly root?: Namespace
 
   private readonly attributes: Map<string, Attribute> = new Map()
@@ -15,7 +13,7 @@ export class Namespace {
     name,
     root
   }: {
-    name: TName,
+    name: type.TString,
     root?: Namespace
   }) {
     this.name = name
@@ -74,8 +72,14 @@ export class Namespace {
     return this
   }
 
-  getAttribute (name: string): Attribute | null {
-    return this.attributes.get(name) || this.root?.getAttribute(name) || null
+  getAttribute (name: string): Attribute {
+    const attr = this.attributes.get(name) || this.root?.getAttribute(name)
+
+    if (!attr) {
+      this.error(`Attribute "${name}" not found`)
+    }
+
+    return attr
   }
 
   private assertFunction (func: Function) {
@@ -96,7 +100,13 @@ export class Namespace {
     return this
   }
 
-  getFunction (name: string): Function | null {
-    return this.functions.get(name) || this.root?.getFunction(name) || null
+  getFunction (name: string): Function {
+    const func = this.functions.get(name) || this.root?.getFunction(name)
+
+    if (!func) {
+      this.error(`Function "${name}" not found`)
+    }
+
+    return func
   }
 }
