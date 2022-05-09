@@ -1,11 +1,43 @@
-import { type } from '../utils'
+import {
+  TSupport,
+  isNull,
+  isBoolean,
+  isNumber,
+  isString,
+  isArray,
+  isObject
+} from '../Type'
+import {
+  TAst,
+  TAstValue,
+  TAstOp,
+  TAstOpBool,
+  assertIsAstValue,
+  assertIsAstValueNull,
+  assertIsAstValueBoolean,
+  assertIsAstValueNumber,
+  assertIsAstValueString,
+  assertIsAstAttribute,
+  assertIsAstFunction,
+  assertIsAstOp,
+  assertIsAstOpBin,
+  assertIsAstOpCmp,
+  assertIsAstOpIn,
+  assertIsAstOpLike,
+  assertIsAstOpBetween,
+  assertIsAstOpIs,
+  assertIsAstOpBool,
+  assertIsAstOpBoolNot,
+  assertIsAstOpBoolAnd,
+  assertIsAstOpBoolOr
+} from '../Ast'
 import { Context } from '../Context'
 
 export class ExecutorBase {
-  protected readonly ast: type.TAst
+  protected readonly ast: TAst
   protected readonly context: Context
 
-  constructor (ast: type.TAst, context: Context) {
+  constructor (ast: TAst, context: Context) {
     this.ast = ast
     this.context = context
   }
@@ -14,143 +46,174 @@ export class ExecutorBase {
     throw new Error(`Executor: ${message}`)
   }
 
-  private getNull = (ast: type.TAst) => {
-    if (ast.type !== 'null') {
-      this.error('Expected type null')
-    }
+  private getAstValueNull = (astValue: TAstValue) => {
+    assertIsAstValueNull(astValue)
 
     return null
   }
 
-  private getBool = (ast: type.TAst) => {
-    if (ast.type !== 'bool') {
-      this.error('Expected type bool')
-    }
-
-    return ast.value
+  private getAstValueBoolean = (astValue: TAstValue) => {
+    return assertIsAstValueBoolean(astValue).value
   }
 
-  private getNum = (ast: type.TAst) => {
-    if (ast.type !== 'num') {
-      this.error('Expected type num')
-    }
-
-    return ast.value
+  private getAstValueNumber = (astValue: TAstValue) => {
+    return assertIsAstValueNumber(astValue).value
   }
 
-  private getStr = (ast: type.TAst) => {
-    if (ast.type !== 'str') {
-      this.error('Expected type str')
-    }
-
-    return ast.value
+  private getAstValueString = (astValue: TAstValue) => {
+    return assertIsAstValueString(astValue).value
   }
 
-  private getAttr = (ast: type.TAst) => {
-    if (ast.type !== 'attr') {
-      this.error('Expected type attr')
-    }
+  private getAstValue = (ast: TAst) => {
+    const astValue = assertIsAstValue(ast)
 
-    return this.context.getAttribute(ast.name).get(this.context)
+    return {
+      null: this.getAstValueNull,
+      boolean: this.getAstValueBoolean,
+      number: this.getAstValueNumber,
+      string: this.getAstValueString
+    }[astValue.type](astValue)
   }
 
-  private execFunc = async (ast: type.TAst) => {
-    if (ast.type !== 'func') {
-      this.error('Expected type func')
-    }
+  private getAstAttribute = (ast: TAst) => {
+    const { context } = this
 
-    const func = this.context.getFunction(ast.name)
+    const astAttr = assertIsAstAttribute(ast)
 
-    const args = await Promise.all(ast.args.map((arg) => this.execute(arg)))
+    return context.getAttribute(astAttr.name).get(context)
+  }
+
+  private execAstFunction = async (ast: TAst) => {
+    const astFunc = assertIsAstFunction(ast)
+
+    const func = this.context.getFunction(astFunc.name)
+
+    const args = await Promise.all(astFunc.args.map(this.execute))
 
     return func.exec(args)
   }
 
-  private execBinOpAdd = (left: type.TSupport, right: type.TSupport) => {
-    if (type.isString(left) && type.isString(right)) {
+  private execAstOpBinAdd = async (astLeft: TAst, astRight: TAst) => {
+    const left = await this.execute(astLeft)
+
+    if (!isString(left) && !isNumber(left)) {
+      this.error('Expected left string or number')
+    }
+
+    const right = await this.execute(astRight)
+
+    if (isString(left) && isString(right)) {
       return left + right
     }
 
-    if (!type.isNumber(left) || !type.isNumber(right)) {
-      this.error('Pair of strings or numbers expected')
+    if (isNumber(left) && isNumber(right)) {
+      return left + right
     }
 
-    return left + right
+    this.error('Pair of strings or numbers expected')
   }
 
-  private execBinOpSub = (left: type.TSupport, right: type.TSupport) => {
-    if (!type.isNumber(left) || !type.isNumber(right)) {
-      this.error('Pair of numbers expected')
+  private execAstOpBinSub = async (astLeft: TAst, astRight: TAst) => {
+    const left = await this.execute(astLeft)
+
+    if (!isNumber(left)) {
+      this.error('Expected left number')
+    }
+
+    const right = await this.execute(astRight)
+
+    if (!isNumber(right)) {
+      this.error('Expected right number')
     }
 
     return left - right
   }
 
-  private execBinOpMult = (left: type.TSupport, right: type.TSupport) => {
-    if (!type.isNumber(left) || !type.isNumber(right)) {
-      this.error('Pair of numbers expected')
+  private execAstOpBinMult = async (astLeft: TAst, astRight: TAst) => {
+    const left = await this.execute(astLeft)
+
+    if (!isNumber(left)) {
+      this.error('Expected left number')
+    }
+
+    if (!left) {
+      return 0
+    }
+
+    const right = await this.execute(astRight)
+
+    if (!isNumber(right)) {
+      this.error('Expected right number')
     }
 
     return left * right
   }
 
-  private execBinOpDiv = (left: type.TSupport, right: type.TSupport) => {
-    if (!type.isNumber(left) || !type.isNumber(right)) {
-      this.error('Pair of numbers expected')
+  private execAstOpBinDiv = async (astLeft: TAst, astRight: TAst) => {
+    const right = await this.execute(astRight)
+
+    if (!isNumber(right)) {
+      this.error('Expected right number')
     }
 
     if (!right) {
       this.error('Division by zero is not allowed')
+    }
+
+    const left = await this.execute(astLeft)
+
+    if (!isNumber(left)) {
+      this.error('Expected left number')
     }
 
     return left / right
   }
 
-  private execBinOpMod = (left: type.TSupport, right: type.TSupport) => {
-    if (!type.isNumber(left) || !type.isNumber(right)) {
-      this.error('Pair of numbers expected')
+  private execAstOpBinMod = async (astLeft: TAst, astRight: TAst) => {
+    const right = await this.execute(astRight)
+
+    if (!isNumber(right)) {
+      this.error('Expected right number')
     }
 
     if (!right) {
       this.error('Division by zero is not allowed')
     }
 
+    const left = await this.execute(astLeft)
+
+    if (!isNumber(left)) {
+      this.error('Expected left number')
+    }
+
     return left % right
   }
 
-  private execBinOpFloorDiv = (left: type.TSupport, right: type.TSupport) => {
-    return Math.floor(this.execBinOpDiv(left, right))
+  private execAstOpBinFloorDiv = async (astLeft: TAst, astRight: TAst) => {
+    const quotient = await this.execAstOpBinDiv(astLeft, astRight)
+
+    return Math.floor(quotient)
   }
 
-  private execBinOp = async (ast: type.TAst) => {
-    if (ast.type !== 'binOp') {
-      this.error('Expected type binOp')
-    }
-
-    const [
-      left,
-      right
-    ] = await Promise.all([
-      this.execute(ast.left),
-      this.execute(ast.right)
-    ])
+  private execAstOpBin = async (astOp: TAstOp) => {
+    const astOpBin = assertIsAstOpBin(astOp)
 
     return {
-      '+': this.execBinOpAdd,
-      '-': this.execBinOpSub,
-      '*': this.execBinOpMult,
-      '/': this.execBinOpDiv,
-      '%': this.execBinOpMod,
-      '//': this.execBinOpFloorDiv
-    }[ast.op](left, right)
+      '+': this.execAstOpBinAdd,
+      '-': this.execAstOpBinSub,
+      '*': this.execAstOpBinMult,
+      '/': this.execAstOpBinDiv,
+      '%': this.execAstOpBinMod,
+      '//': this.execAstOpBinFloorDiv
+    }[astOpBin.op](astOpBin.left, astOpBin.right)
   }
 
-  private execCmpOpEq = (left: type.TSupport, right: type.TSupport) : boolean => {
+  private Eq = (left: TSupport, right: TSupport) : boolean => {
     if (left === right) {
       return true
     }
 
-    if (type.isArray(left) && type.isArray(right)) {
+    if (isArray(left) && isArray(right)) {
       if (left.length !== right.length) {
         return false
       }
@@ -158,11 +221,11 @@ export class ExecutorBase {
       return left.every((leftItem, index) => {
         const rightItem = right[index]
 
-        return this.execCmpOpEq(leftItem, rightItem)
+        return this.Eq(leftItem, rightItem)
       })
     }
 
-    if (type.isObject(left) && type.isObject(right)) {
+    if (isObject(left) && isObject(right)) {
       if (Object.keys(left).length !== Object.keys(right).length) {
         return false
       }
@@ -170,91 +233,79 @@ export class ExecutorBase {
       return Object.entries(left).every(([field, leftField]) => {
         const rightField = right[field]
 
-        return this.execCmpOpEq(leftField, rightField)
+        return this.Eq(leftField, rightField)
       })
     }
 
     return false
   }
 
-  private execCmpOpNotEq = (left: type.TSupport, right: type.TSupport) => {
-    return !this.execCmpOpEq(left, right)
+  private NotEq = (left: TSupport, right: TSupport) => {
+    return !this.Eq(left, right)
   }
 
-  private execCmpOpLt = (left: type.TSupport, right: type.TSupport) => {
-    if (!type.isNumber(left) || !type.isNumber(right)) {
+  private Lt = (left: TSupport, right: TSupport) => {
+    if (!isNumber(left) || !isNumber(right)) {
       this.error('Pair of numbers expected')
     }
 
     return left < right
   }
 
-  private execCmpOpLtE = (left: type.TSupport, right: type.TSupport) => {
-    if (!type.isNumber(left) || !type.isNumber(right)) {
+  private LtE = (left: TSupport, right: TSupport) => {
+    if (!isNumber(left) || !isNumber(right)) {
       this.error('Pair of numbers expected')
     }
 
     return left <= right
   }
 
-  private execCmpOpGt = (left: type.TSupport, right: type.TSupport) => {
-    if (!type.isNumber(left) || !type.isNumber(right)) {
+  private Gt = (left: TSupport, right: TSupport) => {
+    if (!isNumber(left) || !isNumber(right)) {
       this.error('Pair of numbers expected')
     }
 
     return left > right
   }
 
-  private execCmpOpGtE = (left: type.TSupport, right: type.TSupport) => {
-    if (!type.isNumber(left) || !type.isNumber(right)) {
+  private GtE = (left: TSupport, right: TSupport) => {
+    if (!isNumber(left) || !isNumber(right)) {
       this.error('Pair of numbers expected')
     }
 
     return left >= right
   }
 
-  private execCmpOpSimple = async (ast: type.TAst) => {
-    if (ast.type !== 'cmpOp') {
-      this.error('Expected type cmpOp')
-    }
-
-    if (ast.class !== 'simple') {
-      this.error('Expected class simple')
-    }
+  private execAstOpCmp = async (astOp: TAstOp) => {
+    const astOpCmp = assertIsAstOpCmp(astOp)
 
     const [
       left,
       right
     ] = await Promise.all([
-      this.execute(ast.left),
-      this.execute(ast.right)
+      this.execute(astOpCmp.left),
+      this.execute(astOpCmp.right)
     ])
 
     return {
-      '=': this.execCmpOpEq,
-      '!=': this.execCmpOpNotEq,
-      '<': this.execCmpOpLt,
-      '<=': this.execCmpOpLtE,
-      '>': this.execCmpOpGt,
-      '>=': this.execCmpOpGtE
-    }[ast.op](left, right)
+      '=': this.Eq,
+      '!=': this.NotEq,
+      '<': this.Lt,
+      '<=': this.LtE,
+      '>': this.Gt,
+      '>=': this.GtE
+    }[astOpCmp.op](left, right)
   }
 
-  private execCmpOpIn = async (ast: type.TAst) => {
-    if (ast.type !== 'cmpOp') {
-      this.error('Expected type cmpOp')
-    }
+  private execAstOpIn = async (astOp: TAstOp) => {
+    const astOpIn = assertIsAstOpIn(astOp)
 
-    if (ast.op !== 'in') {
-      this.error('Expected type in')
-    }
+    const value = await this.execute(astOpIn.value)
 
-    const value = await this.execute(ast.value)
-
-    for (const item of ast.set) {
+    for (const item of astOpIn.set) {
       const arg = await this.execute(item)
 
-      if (this.execCmpOpEq(value, arg)) {
+      if (this.Eq(value, arg)) {
         return true
       }
     }
@@ -262,24 +313,18 @@ export class ExecutorBase {
     return false
   }
 
-  private execCmpOpLike = async (ast: type.TAst) => {
-    if (ast.type !== 'cmpOp') {
-      this.error('Expected type cmpOp')
-    }
+  private execAstOpLike = async (astOp: TAstOp) => {
+    const astOpLike = assertIsAstOpLike(astOp)
 
-    if (ast.op !== 'like') {
-      this.error('Expected type like')
-    }
+    const value = await this.execute(astOpLike.value)
 
-    const value = await this.execute(ast.value)
-
-    if (!type.isString(value)) {
+    if (!isString(value)) {
       this.error('Expected value string')
     }
 
-    const pattern = await this.execute(ast.pattern)
+    const pattern = await this.execute(astOpLike.pattern)
 
-    if (!type.isString(pattern)) {
+    if (!isString(pattern)) {
       this.error('Expected pattern string')
     }
 
@@ -303,24 +348,18 @@ export class ExecutorBase {
     return new RegExp(bind(replace(escape(pattern)))).test(value)
   }
 
-  private execCmpOpBetween = async (ast: type.TAst) => {
-    if (ast.type !== 'cmpOp') {
-      this.error('Expected type cmpOp')
-    }
+  private execAstOpBetween = async (astOp: TAstOp) => {
+    const astOpBetween = assertIsAstOpBetween(astOp)
 
-    if (ast.op !== 'between') {
-      this.error('Expected type between')
-    }
+    const value = await this.execute(astOpBetween.value)
 
-    const value = await this.execute(ast.value)
-
-    if (!type.isNumber(value)) {
+    if (!isNumber(value)) {
       this.error('Expected value number')
     }
 
-    const begin = await this.execute(ast.begin)
+    const begin = await this.execute(astOpBetween.begin)
 
-    if (!type.isNumber(begin)) {
+    if (!isNumber(begin)) {
       this.error('Expected begin number')
     }
 
@@ -328,87 +367,41 @@ export class ExecutorBase {
       return false
     }
 
-    const end = await this.execute(ast.end)
+    const end = await this.execute(astOpBetween.end)
 
-    if (!type.isNumber(end)) {
+    if (!isNumber(end)) {
       this.error('Expected end number')
     }
 
     return value <= end
   }
 
-  private execCmpOpIs = async (ast: type.TAst) => {
-    if (ast.type !== 'cmpOp') {
-      this.error('Expected type cmpOp')
-    }
+  private execAstOpIs = async (astOp: TAstOp) => {
+    const astOpIs = assertIsAstOpIs(astOp)
 
-    if (ast.op !== 'is') {
-      this.error('Expected type is')
-    }
+    const value = await this.execute(astOpIs.value)
 
-    const value = await this.execute(ast.value)
-
-    return type.isNull(value)
+    return isNull(value)
   }
 
-  private execCmpOpComplex = (ast: type.TAst) => {
-    if (ast.type !== 'cmpOp') {
-      this.error('Expected type cmpOp')
-    }
+  private execAstOpBoolNot = async (astOpBool: TAstOpBool) => {
+    const astOpBoolNot = assertIsAstOpBoolNot(astOpBool)
 
-    if (ast.class !== 'complex') {
-      this.error('Expected class complex')
-    }
+    const value = await this.execute(astOpBoolNot.value)
 
-    return {
-      in: this.execCmpOpIn,
-      like: this.execCmpOpLike,
-      between: this.execCmpOpBetween,
-      is: this.execCmpOpIs
-    }[ast.op](ast)
-  }
-
-  private execCmpOp = (ast: type.TAst) => {
-    if (ast.type !== 'cmpOp') {
-      this.error('Expected type cmpOp')
-    }
-
-    return {
-      simple: this.execCmpOpSimple,
-      complex: this.execCmpOpComplex
-    }[ast.class](ast)
-  }
-
-  private execBoolOpNot = async (ast: type.TAst) => {
-    if (ast.type !== 'boolOp') {
-      this.error('Expected type boolOp')
-    }
-
-    if (ast.op !== 'not') {
-      this.error('Expected op not')
-    }
-
-    const value = await this.execute(ast.value)
-
-    if (!type.isBoolean(value)) {
+    if (!isBoolean(value)) {
       this.error('Expected value boolean')
     }
 
     return !value
   }
 
-  private execBoolOpAnd = async (ast: type.TAst) => {
-    if (ast.type !== 'boolOp') {
-      this.error('Expected type boolOp')
-    }
+  private execAstOpBoolAnd = async (astOpBool: TAstOpBool) => {
+    const astOpBoolAnd = assertIsAstOpBoolAnd(astOpBool)
 
-    if (ast.op !== 'and') {
-      this.error('Expected op and')
-    }
+    const left = await this.execute(astOpBoolAnd.left)
 
-    const left = await this.execute(ast.left)
-
-    if (!type.isBoolean(left)) {
+    if (!isBoolean(left)) {
       this.error('Expected left boolean')
     }
 
@@ -416,27 +409,21 @@ export class ExecutorBase {
       return false
     }
 
-    const right = await this.execute(ast.right)
+    const right = await this.execute(astOpBoolAnd.right)
 
-    if (!type.isBoolean(right)) {
+    if (!isBoolean(right)) {
       this.error('Expected right boolean')
     }
 
     return right
   }
 
-  private execBoolOpOr = async (ast: type.TAst) => {
-    if (ast.type !== 'boolOp') {
-      this.error('Expected type boolOp')
-    }
+  private execAstOpBoolOr = async (astOpBool: TAstOpBool) => {
+    const astOpBoolOr = assertIsAstOpBoolOr(astOpBool)
 
-    if (ast.op !== 'or') {
-      this.error('Expected op or')
-    }
+    const left = await this.execute(astOpBoolOr.left)
 
-    const left = await this.execute(ast.left)
-
-    if (!type.isBoolean(left)) {
+    if (!isBoolean(left)) {
       this.error('Expected left boolean')
     }
 
@@ -444,38 +431,45 @@ export class ExecutorBase {
       return true
     }
 
-    const right = await this.execute(ast.right)
+    const right = await this.execute(astOpBoolOr.right)
 
-    if (!type.isBoolean(right)) {
+    if (!isBoolean(right)) {
       this.error('Expected right boolean')
     }
 
     return right
   }
 
-  private execBoolOp = (ast: type.TAst) => {
-    if (ast.type !== 'boolOp') {
-      this.error('Expected type boolOp')
-    }
+  private execAstOpBool = async (astOp: TAstOp) => {
+    const astOpBool = assertIsAstOpBool(astOp)
 
     return {
-      not: this.execBoolOpNot,
-      and: this.execBoolOpAnd,
-      or: this.execBoolOpOr
-    }[ast.op](ast)
+      not: this.execAstOpBoolNot,
+      and: this.execAstOpBoolAnd,
+      or: this.execAstOpBoolOr
+    }[astOpBool.op](astOpBool)
   }
 
-  protected execute (ast: type.TAst) : type.TSupport | Promise<type.TSupport> {
+  private execAstOp = (ast: TAst) => {
+    const astOp = assertIsAstOp(ast)
+
     return {
-      null: this.getNull,
-      bool: this.getBool,
-      num: this.getNum,
-      str: this.getStr,
-      attr: this.getAttr,
-      func: this.execFunc,
-      binOp: this.execBinOp,
-      cmpOp: this.execCmpOp,
-      boolOp: this.execBoolOp
-    }[ast.type](ast)
+      bin: this.execAstOpBin,
+      cmp: this.execAstOpCmp,
+      in: this.execAstOpIn,
+      like: this.execAstOpLike,
+      between: this.execAstOpBetween,
+      is: this.execAstOpIs,
+      bool: this.execAstOpBool
+    }[astOp.type](astOp)
+  }
+
+  protected execute (ast: TAst) : TSupport | Promise<TSupport> {
+    return {
+      value: this.getAstValue,
+      attribute: this.getAstAttribute,
+      function: this.execAstFunction,
+      op: this.execAstOp
+    }[ast.class](ast)
   }
 }

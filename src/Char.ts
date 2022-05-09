@@ -1,16 +1,12 @@
-export const Plus = '+'
-
-export const Minus = '-'
-
-export const Dot = '.'
-
-export const Apos = '\''
-
-export const Lpar = '('
-
-export const Rpar = ')'
-
-export const Comma = ''
+const Char = {
+  Plus: '+',
+  Minus: '-',
+  Dot: '.',
+  Apos: '\'',
+  Lpar: '(',
+  Rpar: ')',
+  Comma: ','
+}
 
 export function isDigit (char: string) {
   return /^[0-9]$/.test(char)

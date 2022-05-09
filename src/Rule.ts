@@ -1,21 +1,28 @@
 import { type } from './utils'
+import { Target } from './Target'
+import { Namespace } from './Namespace'
 import { Condition } from './Condition'
+import { Context } from './context'
 
 export class Rule {
   readonly name: type.TString
-  private readonly target: Condition
+  private readonly target: Target
+  private readonly namespace?: Namespace
 
   private readonly conditions: Map<string, Condition> = new Map()
 
   constructor ({
     name,
-    target
+    target,
+    namespace
   }: {
     name: type.TString,
-    target: Condition
+    target: Target,
+    namespace?: Namespace
   }) {
     this.name = name
     this.target = target
+    this.namespace = namespace
   }
 
   private error (message: string): never {
@@ -42,5 +49,11 @@ export class Rule {
     return this
   }
 
-  execute () { }
+  async execute (context: Context) : type.TResult {
+    const target = await this.target.execute(context)
+
+    if (!target) {
+      return 'notApplicable'
+    }
+  }
 }

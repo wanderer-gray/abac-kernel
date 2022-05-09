@@ -1,24 +1,29 @@
 import { type } from './utils'
-import VM, { AstNode } from './vm'
 import { Context } from './context'
+import { Executor } from './Executor'
 
 export class Condition {
   readonly name: type.TString
-  private readonly code: AstNode
+  private readonly ast: type.TAst
 
   constructor ({
     name,
-    code
+    ast
   }: {
     name: type.TString,
-    code: AstNode
+    ast: type.TAst
   }) {
     this.name = name
-    this.code = code
+    this.ast = ast
   }
 
-  // @todo Добавить типы результата условия !!!!!!
-  execute (context: Context) {
-    return VM.Execute(this.code, context)
+  async execute (context: Context) : Promise<type.TResult> {
+    try {
+      const result = await Executor.Execute(this.ast, context)
+
+      return result ? 'permit' : 'deny'
+    } catch {
+      return 'indeterminate'
+    }
   }
 }
