@@ -24,15 +24,37 @@ type TAst = {
   class: 'op'
 } & ({
   type: 'bin',
-  op: '+' | '-' | '*' | '/' | '%' | '//',
   left: TAst,
   right: TAst
+} & ({
+  op: '+'
 } | {
+  op: '-'
+} | {
+  op: '*'
+} | {
+  op: '/'
+} | {
+  op: '%'
+} | {
+  op: '//'
+}) | {
   type: 'cmp'
-  op: '=' | '!=' | '<' | '<=' | '>' | '>=',
   left: TAst,
   right: TAst
+} & ({
+  op: '='
 } | {
+  op: '!='
+} | {
+  op: '<'
+} | {
+  op: '<='
+} | {
+  op: '>'
+} | {
+  op: '>='
+}) | {
   type: 'in',
   value: TAst,
   set: TAst[]
@@ -54,10 +76,13 @@ type TAst = {
   op: 'not',
   value: TAst
 } | {
-  op: 'and' | 'or',
   left: TAst,
   right: TAst
-}))
+} & ({
+  op: 'and'
+} | {
+  op: 'or'
+})))
 
 type TAstValue = TAst & { class: 'value' }
 
@@ -243,7 +268,7 @@ function isAstOpBoolOr (ast: TAstOpBool): ast is TAstOpBoolOr {
   return ast.op === 'or'
 }
 
-function error (message: string) : never {
+function error (message: string): never {
   throw new Error(message)
 }
 
