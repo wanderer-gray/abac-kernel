@@ -1,106 +1,54 @@
 import { isObject } from './Type'
 
 type TAst = {
-  class: 'value'
-} & ({
-  type: 'null'
-} | {
-  type: 'boolean',
-  value: boolean
-} | {
-  type: 'number',
-  value: number
-} | {
-  type: 'string',
-  value: string
-}) | {
-  class: 'attribute',
-  name: string
-} | {
-  class: 'function',
-  name: string,
-  args: TAst[]
-} | {
-  class: 'op'
-} & ({
-  type: 'bin',
-  left: TAst,
-  right: TAst
-} & ({
-  op: '+'
-} | {
-  op: '-'
-} | {
-  op: '*'
-} | {
-  op: '/'
-} | {
-  op: '%'
-} | {
-  op: '//'
-}) | {
-  type: 'cmp'
-  left: TAst,
-  right: TAst
-} & ({
-  op: '='
-} | {
-  op: '!='
-} | {
-  op: '<'
-} | {
-  op: '<='
-} | {
-  op: '>'
-} | {
-  op: '>='
-}) | {
-  type: 'in',
-  value: TAst,
-  set: TAst[]
-} | {
-  type: 'like',
-  value: TAst,
-  pattern: TAst
-} | {
-  type: 'between',
-  value: TAst,
-  begin: TAst,
-  end: TAst
-} | {
-  type: 'is',
-  value: TAst
-} | {
-  type: 'bool'
-} & ({
-  op: 'not',
-  value: TAst
-} | {
-  left: TAst,
-  right: TAst
-} & ({
-  op: 'and'
-} | {
-  op: 'or'
-})))
+  class: 'value' | 'attribute' | 'function' | 'op',
+  type: string
+}
 
-type TAstValue = TAst & { class: 'value' }
+type TAstValue = TAst & {
+  class: 'value',
+  type: 'null' | 'boolean' | 'number' | 'string'
+}
 
 type TAstValueNull = TAstValue & { type: 'null' }
 
-type TAstValueBoolean = TAstValue & { type: 'boolean' }
+type TAstValueBoolean = TAstValue & {
+  type: 'boolean',
+  value: boolean
+}
 
-type TAstValueNumber = TAstValue & { type: 'number' }
+type TAstValueNumber = TAstValue & {
+  type: 'number',
+  value: number
+}
 
-type TAstValueString = TAstValue & { type: 'string' }
+type TAstValueString = TAstValue & {
+  type: 'string',
+  value: string
+}
 
-type TAstAttribute = TAst & { class: 'attribute' }
+type TAstAttribute = TAst & {
+  class: 'attribute',
+  name: string
+}
 
-type TAstFunction = TAst & { class: 'function' }
+type TAstFunction = TAst & {
+  class: 'function',
+  name: string,
+  args: TAst[]
+}
 
-type TAstOp = TAst & { class: 'op' }
+type TAstOp = TAst & {
+  class: 'op',
+  type: 'bin' | 'cmp' | 'in' | 'like' | 'between' | 'is' | 'bool'
+}
 
-type TAstOpBin = TAstOp & { type: 'bin' }
+type TAstOpBin = TAstOp & {
+  type: 'bin',
+  op: '+' | '-' | '*' | '/' | '%' | '//',
+  left: TAst,
+  right: TAst
+}
 
 type TAstOpBinAdd = TAstOpBin & { op: '+' }
 
@@ -114,7 +62,12 @@ type TAstOpBinMod = TAstOpBin & { op: '%' }
 
 type TAstOpBinFloorDiv = TAstOpBin & { op: '//' }
 
-type TAstOpCmp = TAstOp & { type: 'cmp' }
+type TAstOpCmp = TAstOp & {
+  type: 'cmp',
+  op: '=' | '!=' | '<' | '<=' | '>' | '>=',
+  left: TAst,
+  right: TAst
+}
 
 type TAstOpCmpEq = TAstOpCmp & { op: '=' }
 
@@ -128,21 +81,51 @@ type TAstOpCmpGt = TAstOpCmp & { op: '>' }
 
 type TAstOpCmpGtE = TAstOpCmp & { op: '>=' }
 
-type TAstOpIn = TAstOp & { type: 'in' }
+type TAstOpIn = TAstOp & {
+  type: 'in',
+  value: TAst,
+  set: TAst[]
+}
 
-type TAstOpLike = TAstOp & { type: 'like' }
+type TAstOpLike = TAstOp & {
+  type: 'like',
+  value: TAst,
+  pattern: TAst
+}
 
-type TAstOpBetween = TAstOp & { type: 'between' }
+type TAstOpBetween = TAstOp & {
+  type: 'between',
+  value: TAst,
+  begin: TAst,
+  end: TAst
+}
 
-type TAstOpIs = TAstOp & { type: 'is' }
+type TAstOpIs = TAstOp & {
+  type: 'is',
+  value: TAst
+}
 
-type TAstOpBool = TAstOp & { type: 'bool' }
+type TAstOpBool = TAstOp & {
+  type: 'bool',
+  op: 'not' | 'and' | 'or'
+}
 
-type TAstOpBoolNot = TAstOpBool & { op: 'not' }
+type TAstOpBoolNot = TAstOpBool & {
+  op: 'not',
+  value: TAst
+}
 
-type TAstOpBoolAnd = TAstOpBool & { op: 'and' }
+type TAstOpBoolAnd = TAstOpBool & {
+  op: 'and',
+  left: TAst,
+  right: TAst
+}
 
-type TAstOpBoolOr = TAstOpBool & { op: 'or' }
+type TAstOpBoolOr = TAstOpBool & {
+  op: 'or',
+  left: TAst,
+  right: TAst
+}
 
 function isAst (ast: any): ast is TAst {
   return isObject(ast)

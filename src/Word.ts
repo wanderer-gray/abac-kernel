@@ -1,11 +1,37 @@
-export const NULL = convertToIText('null')
+const iNull = convertToIText('null')
 
-export const FALSE = convertToIText('false')
+const iFalse = convertToIText('false')
 
-export const TRUE = convertToIText('true')
+const iTrue = convertToIText('true')
 
-export const AND = convertToIText('and')
+const iNot = convertToIText('not')
 
-export function convertToIText (text: string) {
+const iAnd = convertToIText('and')
+
+const iOr = convertToIText('or')
+
+const iIn = convertToIText('in')
+
+const iLike = convertToIText('like')
+
+const iBetween = convertToIText('between')
+
+const iIs = convertToIText('is')
+
+function convertToIText (text: string) {
   return text.toUpperCase()
+}
+
+export {
+  iNull,
+  iFalse,
+  iTrue,
+  iNot,
+  iAnd,
+  iOr,
+  iIn,
+  iLike,
+  iBetween,
+  iIs,
+  convertToIText
 }

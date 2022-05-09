@@ -33,7 +33,7 @@ import {
 } from '../Ast'
 import { Context } from '../Context'
 
-export class ExecutorBase {
+class ExecutorBase {
   protected readonly ast: TAst
   protected readonly context: Context
 
@@ -42,7 +42,7 @@ export class ExecutorBase {
     this.context = context
   }
 
-  protected error (message: string) : never {
+  protected error (message: string): never {
     throw new Error(`Executor: ${message}`)
   }
 
@@ -72,7 +72,7 @@ export class ExecutorBase {
       boolean: this.getAstValueBoolean,
       number: this.getAstValueNumber,
       string: this.getAstValueString
-    }[astValue.type](astValue)
+    }[astValue.type]?.(astValue)
   }
 
   private getAstAttribute = (ast: TAst) => {
@@ -208,7 +208,7 @@ export class ExecutorBase {
     }[astOpBin.op](astOpBin.left, astOpBin.right)
   }
 
-  private Eq = (left: TSupport, right: TSupport) : boolean => {
+  private Eq = (left: TSupport, right: TSupport): boolean => {
     if (left === right) {
       return true
     }
@@ -464,7 +464,7 @@ export class ExecutorBase {
     }[astOp.type](astOp)
   }
 
-  protected execute (ast: TAst) : TSupport | Promise<TSupport> {
+  protected execute (ast: TAst): TSupport | Promise<TSupport> {
     return {
       value: this.getAstValue,
       attribute: this.getAstAttribute,
@@ -472,4 +472,8 @@ export class ExecutorBase {
       op: this.execAstOp
     }[ast.class](ast)
   }
+}
+
+export {
+  ExecutorBase
 }

@@ -1,92 +1,107 @@
-import { char, word, type } from '../utils'
+import { isDigit } from '../Char'
+import {
+  iNull,
+  iFalse,
+  iTrue
+} from '../Word'
+import {
+  TAstValueNull,
+  TAstValueBoolean,
+  TAstValueNumber,
+  TAstValueString
+} from '../Ast'
 import { ParserBase } from './ParserBase'
 
 export class ParserValue extends ParserBase {
-  private getNull () : type.TAst | null {
-    if (!this.searchIText(word.Null)) {
+  private getNull = () => {
+    if (!this.searchIText(iNull)) {
       return null
     }
 
-    return {
+    return <TAstValueNull>{
+      class: 'value',
       type: 'null'
     }
   }
 
-  private getBool () : type.TAst | null {
-    const value = this.searchIText(word.False, word.True)
+  private getBoolean = () => {
+    const value = this.searchIText(iFalse, iTrue)
 
     if (!value) {
       return null
     }
 
-    return {
-      type: 'bool',
-      value: value === word.True
+    return <TAstValueBoolean>{
+      class: 'value',
+      type: 'boolean',
+      value: value === iTrue
     }
   }
 
-  private getNum () : type.TAst | null {
+  private getNumber = () => {
     let value = ''
 
-    for (;;) {
-      for (; char.isDigit(this.peek()); this.next()) {
+    for (; ;) {
+      for (; isDigit(this.peek()); this.next()) {
         value += this.peek()
       }
 
-      if (value.includes(char.Dot) || !this.searchIText(char.Dot)) {
+      if (value.includes('.') || !this.searchIText('.')) {
         break
       }
 
-      value += char.Dot
+      value += '.'
     }
 
-    if (!value || value === char.Dot) {
+    if (!value || value === '.') {
       return null
     }
 
-    return {
-      type: 'num',
+    return <TAstValueNumber>{
+      class: 'value',
+      type: 'number',
       value: +value
     }
   }
 
-  private getStr () : type.TAst | null {
-    if (!this.searchIText(char.Apos)) {
+  private getString = () => {
+    if (!this.searchIText('\'')) {
       return null
     }
 
     let value = ''
 
-    for (;;) {
-      for (; !this.eof() && this.peek() !== char.Apos; this.next()) {
+    for (; ;) {
+      for (; !this.eof() && this.peek() !== '\''; this.next()) {
         value += this.peek()
       }
 
-      if (!this.searchIText(char.Apos.repeat(2))) {
+      if (!this.searchIText('\''.repeat(2))) {
         break
       }
 
-      value += char.Apos
+      value += '\''
     }
 
-    if (!this.searchIText(char.Apos)) {
+    if (!this.searchIText('\'')) {
       this.error('Expected apos')
     }
 
     this.skip()
 
-    return {
-      type: 'str',
+    return <TAstValueString>{
+      class: 'value',
+      type: 'string',
       value
     }
   }
 
-  protected getValue () {
+  protected getValue = () => {
     return this.searchNode(
       this.getNull,
-      this.getBool,
-      this.getNum,
-      this.getStr
+      this.getBoolean,
+      this.getNumber,
+      this.getString
     )
   }
 }

@@ -1,9 +1,13 @@
-import { type } from './utils'
+import * as Type from './Type'
 
 export type TSchema = {
   nullable?: boolean
 } & ({
-  type: 'boolean' | 'number' | 'string'
+  type: 'boolean'
+} | {
+  type: 'number'
+} | {
+  type: 'string'
 } | {
   type: 'array',
   items?: TSchema
@@ -19,7 +23,7 @@ function isNullable (data: any, schema: TSchema) {
     return false
   }
 
-  return type.isNull(data)
+  return Type.isNull(data)
 }
 
 function isBoolean (data: any, schema: TSchema) {
@@ -27,7 +31,7 @@ function isBoolean (data: any, schema: TSchema) {
     return false
   }
 
-  return type.isBoolean(data)
+  return Type.isBoolean(data)
 }
 
 function isNumber (data: any, schema: TSchema) {
@@ -35,7 +39,7 @@ function isNumber (data: any, schema: TSchema) {
     return false
   }
 
-  return type.isNumber(data)
+  return Type.isNumber(data)
 }
 
 function isString (data: any, schema: TSchema) {
@@ -43,7 +47,7 @@ function isString (data: any, schema: TSchema) {
     return false
   }
 
-  return type.isString(data)
+  return Type.isString(data)
 }
 
 function isArray (data: any, schema: TSchema) {
@@ -51,7 +55,7 @@ function isArray (data: any, schema: TSchema) {
     return false
   }
 
-  if (!type.isArray(data)) {
+  if (!Type.isArray(data)) {
     return false
   }
 
@@ -71,7 +75,7 @@ function isObject (data: any, schema: TSchema) {
     return false
   }
 
-  if (!type.isObject(data)) {
+  if (!Type.isObject(data)) {
     return false
   }
 

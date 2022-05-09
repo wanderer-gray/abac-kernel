@@ -1,15 +1,21 @@
-import { char, binOp, type } from '../utils'
+import { isLetter, isLetterOrDigit } from '../Char'
+import {
+  TAst,
+  TAstAttribute,
+  TAstFunction,
+  TAstOpBin
+} from '../Ast'
 import { ParserValue } from './ParserValue'
 
 export class ParserOperand extends ParserValue {
   private getBind () {
-    if (!char.isLetter(this.peek())) {
+    if (!isLetter(this.peek())) {
       return null
     }
 
     let name = ''
 
-    for (; char.isLetterOrDigit(this.peek()); this.next()) {
+    for (; isLetterOrDigit(this.peek()); this.next()) {
       name += this.peek()
     }
 
@@ -18,34 +24,34 @@ export class ParserOperand extends ParserValue {
     return name
   }
 
-  private getAttr () : type.TAst | null {
+  private getAttribute = () => {
     const name = this.getBind()
 
-    if (!name || this.searchIText(char.Lpar)) {
+    if (!name || this.searchIText('(')) {
       return null
     }
 
-    return {
-      type: 'attr',
+    return <TAstAttribute>{
+      class: 'attribute',
       name
     }
   }
 
-  private getFunc () : type.TAst | null {
+  private getFunction = () => {
     const name = this.getBind()
 
-    if (!name || !this.searchIText(char.Lpar)) {
+    if (!name || !this.searchIText('(')) {
       return null
     }
 
-    const args: type.TAst[] = []
+    const args: TAst[] = []
 
     let arg = this.getOperand()
 
     while (arg) {
       args.push(arg)
 
-      if (!this.searchIText(char.Comma)) {
+      if (!this.searchIText(',')) {
         break
       }
 
@@ -56,19 +62,19 @@ export class ParserOperand extends ParserValue {
       }
     }
 
-    if (!this.searchIText(char.Rpar)) {
+    if (!this.searchIText(')')) {
       this.error('Expected rpar')
     }
 
-    return {
-      type: 'func',
+    return <TAstFunction>{
+      class: 'function',
       name,
       args
     }
   }
 
-  private getGroup () {
-    if (!this.searchIText(char.Lpar)) {
+  private getGroup = () => {
+    if (!this.searchIText('(')) {
       return null
     }
 
@@ -78,7 +84,7 @@ export class ParserOperand extends ParserValue {
       this.error('Expected operand')
     }
 
-    if (!this.searchIText(char.Rpar)) {
+    if (!this.searchIText(')')) {
       this.error('Expected rpar')
     }
 
@@ -88,8 +94,8 @@ export class ParserOperand extends ParserValue {
   private getTerm () {
     return this.searchNode(
       this.getValue,
-      this.getAttr,
-      this.getFunc,
+      this.getAttribute,
+      this.getFunction,
       this.getGroup
     )
   }
@@ -101,15 +107,15 @@ export class ParserOperand extends ParserValue {
       return null
     }
 
-    for (;;) {
+    for (; ;) {
       const op = this.searchIText(
-        binOp.FloorDiv,
-        binOp.Mult,
-        binOp.Div,
-        binOp.Mod
+        '//',
+        '*',
+        '/',
+        '%'
       )
 
-      if (!op || !binOp.is(op)) {
+      if (!op) {
         return left
       }
 
@@ -119,8 +125,9 @@ export class ParserOperand extends ParserValue {
         this.error('Expected right')
       }
 
-      left = {
-        type: 'binOp',
+      left = <TAstOpBin>{
+        class: 'op',
+        type: 'bin',
         op,
         left,
         right
@@ -135,10 +142,10 @@ export class ParserOperand extends ParserValue {
       return null
     }
 
-    for (;;) {
-      const op = this.searchIText(binOp.Add, binOp.Sub)
+    for (; ;) {
+      const op = this.searchIText('+', '-')
 
-      if (!op || !binOp.is(op)) {
+      if (!op) {
         return left
       }
 
@@ -148,8 +155,9 @@ export class ParserOperand extends ParserValue {
         this.error('Expected right')
       }
 
-      left = {
-        type: 'binOp',
+      left = <TAstOpBin>{
+        class: 'op',
+        type: 'bin',
         op,
         left,
         right
@@ -157,7 +165,7 @@ export class ParserOperand extends ParserValue {
     }
   }
 
-  protected getOperand () : type.TAst | null {
+  protected getOperand (): TAst | null {
     return this.getSummand()
   }
 }

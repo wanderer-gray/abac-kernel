@@ -1,11 +1,11 @@
-import { type } from './utils'
+import { TSupport } from './Type'
 import * as Schema from './Schema'
 
 export class Function {
-  readonly name: type.TString
+  readonly name: string
   private readonly input: { schema: Schema.TSchema }[]
   private readonly output: { schema: Schema.TSchema }
-  private readonly executor: (...args: type.TSupport[]) => Promise<type.TSupport>
+  private readonly executor: (...args: TSupport[]) => Promise<TSupport>
 
   constructor ({
     name,
@@ -13,10 +13,10 @@ export class Function {
     output,
     executor
   }: {
-    name: type.TString,
+    name: string,
     input: { schema: Schema.TSchema }[],
     output: { schema: Schema.TSchema },
-    executor: (...args: type.TSupport[]) => Promise<type.TSupport>
+    executor: (...args: TSupport[]) => Promise<TSupport>
   }) {
     this.name = name
     this.input = input
@@ -28,7 +28,7 @@ export class Function {
     throw new Error(`Function[${this.name}]: ${message}`)
   }
 
-  private assertArgs (args: type.TSupport[]) {
+  private assertArgs (args: TSupport[]) {
     const { input } = this
 
     if (args.length !== input.length) {
@@ -44,13 +44,13 @@ export class Function {
     }
   }
 
-  private assertResult (result: type.TSupport) {
+  private assertResult (result: TSupport) {
     if (!Schema.verify(result, this.output.schema)) {
       this.error(`Invalid result: ${result}`)
     }
   }
 
-  private async getResult (args: type.TSupport[]) {
+  private async getResult (args: TSupport[]) {
     try {
       return await this.executor.apply(undefined, args)
     } catch {
@@ -58,7 +58,7 @@ export class Function {
     }
   }
 
-  async exec (args: type.TSupport[]) {
+  async exec (args: TSupport[]) {
     this.assertArgs(args)
 
     const result = await this.getResult(args)

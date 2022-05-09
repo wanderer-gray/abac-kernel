@@ -1,19 +1,39 @@
-import { char, word, cmpOp, boolOp, type } from '../utils'
+import {
+  iNull,
+  iNot,
+  iAnd,
+  iOr,
+  iIn,
+  iLike,
+  iBetween,
+  iIs
+} from '../Word'
+import {
+  TAst,
+  TAstOpCmp,
+  TAstOpIn,
+  TAstOpLike,
+  TAstOpBetween,
+  TAstOpIs,
+  TAstOpBoolNot,
+  TAstOpBoolAnd,
+  TAstOpBoolOr
+} from '../Ast'
 import { ParserOperand } from './ParserOperand'
 
 export class ParserExpression extends ParserOperand {
-  private getCmpOperand (left: type.TAst) {
-    return () : type.TAst | null => {
+  private getCmpOperand = (left: TAst) => {
+    return () => {
       const op = this.searchIText(
-        cmpOp.Eq,
-        cmpOp.NotEq,
-        cmpOp.LtE,
-        cmpOp.Lt,
-        cmpOp.GtE,
-        cmpOp.Gt
+        '=',
+        '!=',
+        '<=',
+        '<',
+        '>=',
+        '>'
       )
 
-      if (!op || !cmpOp.isSimple(op)) {
+      if (!op) {
         return null
       }
 
@@ -23,9 +43,9 @@ export class ParserExpression extends ParserOperand {
         this.error('Expected right')
       }
 
-      return {
-        type: 'cmpOp',
-        class: 'simple',
+      return <TAstOpCmp>{
+        class: 'op',
+        type: 'cmp',
         op,
         left,
         right
@@ -33,19 +53,19 @@ export class ParserExpression extends ParserOperand {
     }
   }
 
-  private getInOperands (value: type.TAst) {
-    return () : type.TAst | null => {
-      const boolNot = this.searchIText(boolOp.Not)
+  private getInOperands = (value: TAst) => {
+    return () => {
+      const boolNot = this.searchIText(iNot)
 
-      if (!this.searchIText(cmpOp.In)) {
+      if (!this.searchIText(iIn)) {
         return null
       }
 
-      if (!this.searchIText(char.Lpar)) {
+      if (!this.searchIText('(')) {
         this.error('Expected lpar')
       }
 
-      const set: type.TAst[] = []
+      const set: TAst[] = []
 
       do {
         const arg = this.getOperand()
@@ -55,37 +75,37 @@ export class ParserExpression extends ParserOperand {
         }
 
         set.push(arg)
-      } while (this.searchIText(char.Comma))
+      } while (this.searchIText(','))
 
-      if (!this.searchIText(char.Rpar)) {
+      if (!this.searchIText(')')) {
         this.error('Expected rpar')
       }
 
-      const cmp : type.TAst = {
-        type: 'cmpOp',
-        class: 'complex',
-        op: 'in',
+      const opIn = <TAstOpIn>{
+        class: 'op',
+        type: 'in',
         value,
         set
       }
 
       if (boolNot) {
-        return {
-          type: 'boolOp',
+        return <TAstOpBoolNot>{
+          class: 'op',
+          type: 'bool',
           op: 'not',
-          value: cmp
+          value: opIn
         }
       }
 
-      return cmp
+      return opIn
     }
   }
 
-  private getLikeOperand (value: type.TAst) {
-    return () : type.TAst | null => {
-      const boolNot = this.searchIText(boolOp.Not)
+  private getLikeOperand = (value: TAst) => {
+    return () => {
+      const boolNot = this.searchIText(iNot)
 
-      if (!this.searchIText(cmpOp.Like)) {
+      if (!this.searchIText(iLike)) {
         return null
       }
 
@@ -95,31 +115,31 @@ export class ParserExpression extends ParserOperand {
         this.error('Expected pattern')
       }
 
-      const cmp : type.TAst = {
-        type: 'cmpOp',
-        class: 'complex',
-        op: 'like',
+      const opLike = <TAstOpLike>{
+        class: 'op',
+        type: 'like',
         value,
         pattern
       }
 
       if (boolNot) {
-        return {
-          type: 'boolOp',
+        return <TAstOpBoolNot>{
+          class: 'op',
+          type: 'bool',
           op: 'not',
-          value: cmp
+          value: opLike
         }
       }
 
-      return cmp
+      return opLike
     }
   }
 
-  private getBetweenOperands (value: type.TAst) {
-    return () : type.TAst | null => {
-      const boolNot = this.searchIText(boolOp.Not)
+  private getBetweenOperands = (value: TAst) => {
+    return () => {
+      const boolNot = this.searchIText(iNot)
 
-      if (!this.searchIText(cmpOp.Between)) {
+      if (!this.searchIText(iBetween)) {
         return null
       }
 
@@ -129,7 +149,7 @@ export class ParserExpression extends ParserOperand {
         this.error('Expected begin')
       }
 
-      if (!this.searchIText(word.And)) {
+      if (!this.searchIText(iAnd)) {
         this.error('Expected AND')
       }
 
@@ -139,59 +159,59 @@ export class ParserExpression extends ParserOperand {
         this.error('Expected end')
       }
 
-      const cmp : type.TAst = {
-        type: 'cmpOp',
-        class: 'complex',
-        op: 'between',
+      const opBetween = <TAstOpBetween>{
+        class: 'op',
+        type: 'between',
         value,
         begin,
         end
       }
 
       if (boolNot) {
-        return {
-          type: 'boolOp',
+        return <TAstOpBoolNot>{
+          class: 'op',
+          type: 'bool',
           op: 'not',
-          value: cmp
+          value: opBetween
         }
       }
 
-      return cmp
+      return opBetween
     }
   }
 
-  private getIsNull (value: type.TAst) {
-    return () : type.TAst | null => {
-      if (!this.searchIText(cmpOp.Is)) {
+  private getIsNull = (value: TAst) => {
+    return () => {
+      if (!this.searchIText(iIs)) {
         return null
       }
 
-      const boolNot = this.searchIText(boolOp.Not)
+      const boolNot = this.searchIText(iNot)
 
-      if (!this.searchIText(word.Null)) {
+      if (!this.searchIText(iNull)) {
         this.error('Expected NULL')
       }
 
-      const cmp : type.TAst = {
-        type: 'cmpOp',
-        class: 'complex',
-        op: 'is',
+      const opIs = <TAstOpIs>{
+        class: 'op',
+        type: 'is',
         value
       }
 
       if (boolNot) {
-        return {
-          type: 'boolOp',
+        return <TAstOpBoolNot>{
+          class: 'op',
+          type: 'bool',
           op: 'not',
-          value: cmp
+          value: opIs
         }
       }
 
-      return cmp
+      return opIs
     }
   }
 
-  private getOperands () {
+  private getOperands = () => {
     const left = this.getOperand()
 
     if (!left) {
@@ -207,8 +227,8 @@ export class ParserExpression extends ParserOperand {
     )
   }
 
-  private getNotExpression () : type.TAst | null {
-    if (!this.searchIText(boolOp.Not)) {
+  private getNotExpression = () => {
+    if (!this.searchIText(iNot)) {
       return null
     }
 
@@ -218,15 +238,16 @@ export class ParserExpression extends ParserOperand {
       this.error('Expected value')
     }
 
-    return {
-      type: 'boolOp',
+    return <TAstOpBoolNot>{
+      class: 'op',
+      type: 'bool',
       op: 'not',
       value
     }
   }
 
-  private getGroupExpression () {
-    if (!this.searchIText(char.Lpar)) {
+  private getGroupExpression = () => {
+    if (!this.searchIText('(')) {
       return null
     }
 
@@ -236,7 +257,7 @@ export class ParserExpression extends ParserOperand {
       this.error('Expected expression')
     }
 
-    if (!this.searchIText(char.Rpar)) {
+    if (!this.searchIText(')')) {
       throw new Error('Expected rpar')
     }
 
@@ -258,8 +279,8 @@ export class ParserExpression extends ParserOperand {
       return null
     }
 
-    for (;;) {
-      if (!this.searchIText(boolOp.And)) {
+    for (; ;) {
+      if (!this.searchIText(iAnd)) {
         return left
       }
 
@@ -269,8 +290,9 @@ export class ParserExpression extends ParserOperand {
         this.error('Expected right')
       }
 
-      left = {
-        type: 'boolOp',
+      left = <TAstOpBoolAnd>{
+        class: 'op',
+        type: 'bool',
         op: 'and',
         left,
         right
@@ -285,8 +307,8 @@ export class ParserExpression extends ParserOperand {
       return null
     }
 
-    for (;;) {
-      if (!this.searchIText(boolOp.Or)) {
+    for (; ;) {
+      if (!this.searchIText(iOr)) {
         return left
       }
 
@@ -296,8 +318,9 @@ export class ParserExpression extends ParserOperand {
         this.error('Expected right')
       }
 
-      left = {
-        type: 'boolOp',
+      left = <TAstOpBoolOr>{
+        class: 'op',
+        type: 'bool',
         op: 'or',
         left,
         right
@@ -305,7 +328,7 @@ export class ParserExpression extends ParserOperand {
     }
   }
 
-  protected getExpression () : type.TAst | null {
+  protected getExpression (): TAst | null {
     return this.getOrCondition()
   }
 }

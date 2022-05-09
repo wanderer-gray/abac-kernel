@@ -1,9 +1,8 @@
-import { type } from './utils'
 import { Attribute } from './Attribute'
 import { Function } from './Function'
 
 export class Namespace {
-  readonly name: type.TString
+  readonly name: string
   private readonly root?: Namespace
 
   private readonly attributes: Map<string, Attribute> = new Map()
@@ -13,7 +12,7 @@ export class Namespace {
     name,
     root
   }: {
-    name: type.TString,
+    name: string,
     root?: Namespace
   }) {
     this.name = name

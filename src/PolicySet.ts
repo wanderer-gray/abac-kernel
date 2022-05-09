@@ -1,9 +1,10 @@
-import { type } from './utils'
 import { Condition } from './Condition'
 import { Policy } from './Policy'
+import { Context } from './context'
+import { TResult } from './Result'
 
 export class PolicySet {
-  readonly name: type.TString
+  readonly name: string
   private readonly target: Condition
 
   private readonly policies: Map<string, Policy> = new Map()
@@ -12,7 +13,7 @@ export class PolicySet {
     name,
     target
   }: {
-    name: type.TString,
+    name: string,
     target: Condition
   }) {
     this.name = name
@@ -43,5 +44,13 @@ export class PolicySet {
     return this
   }
 
-  execute () { }
+  async execute (context: Context): Promise<TResult> {
+    const target = await this.target.execute(context)
+
+    if (!target) {
+      return 'none'
+    }
+
+    return 'permit'
+  }
 }

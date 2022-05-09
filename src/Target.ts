@@ -1,11 +1,11 @@
-import { type } from './utils'
-import { Context } from './context'
+import { TAst } from './Ast'
+import { Context } from './Context'
 import { Executor } from './Executor'
 
 export class Target {
-  private readonly ast: type.TAst
+  private readonly ast: TAst
 
-  constructor (ast: type.TAst) {
+  constructor (ast: TAst) {
     this.ast = ast
   }
 

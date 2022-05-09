@@ -1,9 +1,9 @@
-import { type } from './utils'
+import { TObject } from './Type'
 import { ABAC } from './ABAC'
 import { Namespace } from './Namespace'
 
 export class Context {
-  private readonly data: type.TObject
+  private readonly data: TObject
 
   private namespace: Namespace
 
@@ -12,7 +12,7 @@ export class Context {
     data
   }: {
     abac: ABAC,
-    data: type.TObject
+    data: TObject
   }) {
     this.data = data
 

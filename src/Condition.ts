@@ -1,29 +1,34 @@
-import { type } from './utils'
+import { TAst } from './Ast'
 import { Context } from './context'
 import { Executor } from './Executor'
+import { TResult } from './Result'
 
 export class Condition {
-  readonly name: type.TString
-  private readonly ast: type.TAst
+  readonly name: string
+  private readonly ast: TAst
 
   constructor ({
     name,
     ast
   }: {
-    name: type.TString,
-    ast: type.TAst
+    name: string,
+    ast: TAst
   }) {
     this.name = name
     this.ast = ast
   }
 
-  async execute (context: Context) : Promise<type.TResult> {
+  async execute (context: Context) : Promise<TResult> {
     try {
       const result = await Executor.Execute(this.ast, context)
 
-      return result ? 'permit' : 'deny'
+      if (result) {
+        return 'permit'
+      }
+
+      return 'deny'
     } catch {
-      return 'indeterminate'
+      return 'error'
     }
   }
 }

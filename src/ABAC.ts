@@ -1,4 +1,4 @@
-import { type } from './utils'
+import { TObject } from './Type'
 import { Namespace } from './Namespace'
 import { PolicySet } from './PolicySet'
 import { Context } from './Context'
@@ -65,7 +65,7 @@ export class ABAC {
     return this
   }
 
-  Context (data: type.TObject) {
+  Context (data: TObject) {
     return new Context({
       abac: this,
       data

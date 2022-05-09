@@ -1,12 +1,16 @@
-import { type } from './utils'
+import {
+  TSupport,
+  TObject,
+  isObject
+} from './Type'
 import * as Schema from './Schema'
 import { Context } from './context'
 
 export class Attribute {
-  readonly name: type.TString
-  private readonly path: type.TArray<type.TString>
+  readonly name: string
+  private readonly path: string[]
   private readonly schema: Schema.TSchema
-  private readonly computer?: (data: type.TObject) => Promise<type.TSupport>
+  private readonly computer?: (data: TObject) => Promise<TSupport>
 
   constructor ({
     name,
@@ -14,10 +18,10 @@ export class Attribute {
     schema,
     computer
   }: {
-    name: type.TString,
-    path: type.TArray<type.TString>,
+    name: string,
+    path: string[],
     schema: Schema.TSchema,
-    computer?: (data: type.TObject) => Promise<type.TSupport>
+    computer?: (data: TObject) => Promise<TSupport>
   }) {
     this.name = name
     this.path = path
@@ -29,17 +33,17 @@ export class Attribute {
     throw new Error(`Argument[${this.name}]: ${message}`)
   }
 
-  private assertValue (value: type.TSupport) {
+  private assertValue (value: TSupport) {
     if (!Schema.verify(value, this.schema)) {
       this.error(`Invalid value: ${value}`)
     }
   }
 
-  private getByPath (data: type.TObject) {
-    let value: type.TSupport = data
+  private getByPath (data: TObject) {
+    let value: TSupport = data
 
     for (const key of this.path) {
-      if (!type.isObject(value)) {
+      if (!isObject(value)) {
         return { ok: false, value: null }
       }
 
@@ -49,7 +53,7 @@ export class Attribute {
     return { ok: true, value }
   }
 
-  private async getByComputer (data: type.TObject) {
+  private async getByComputer (data: TObject) {
     const { computer } = this
 
     if (!computer) {

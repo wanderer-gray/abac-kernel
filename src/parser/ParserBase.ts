@@ -1,4 +1,6 @@
-import { char, word, type } from '../utils'
+import { isWhitespace } from '../Char'
+import { convertToIText } from '../Word'
+import { TAst } from '../Ast'
 
 export class ParserBase {
   private readonly source: string
@@ -10,10 +12,10 @@ export class ParserBase {
     source = source.trim()
 
     this.source = source
-    this.iSource = word.convertToIText(source)
+    this.iSource = convertToIText(source)
   }
 
-  protected error (message: string) : never {
+  protected error (message: string): never {
     throw new Error(`Parser: ${message}`)
   }
 
@@ -30,7 +32,7 @@ export class ParserBase {
   }
 
   protected skip () {
-    while (!this.eof() && char.isWhitespace(this.peek())) {
+    while (!this.eof() && isWhitespace(this.peek())) {
       this.next()
     }
   }
@@ -49,11 +51,11 @@ export class ParserBase {
     return null
   }
 
-  protected searchNode (...parsers: (() => type.TAst | null)[]) {
+  protected searchNode (...parsers: (() => TAst | null)[]) {
     const { position: startPosition } = this
 
     for (const parser of parsers) {
-      const node = parser.call(this)
+      const node = parser()
 
       if (node) {
         return node
