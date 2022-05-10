@@ -10,6 +10,7 @@ import {
 } from '../Word'
 import {
   TAst,
+  TAstOp,
   TAstOpCmp,
   TAstOpIn,
   TAstOpLike,
@@ -218,7 +219,7 @@ export class ParserExpression extends ParserOperand {
       return null
     }
 
-    return this.searchNode(
+    return this.searchNode<TAstOp>(
       this.getCmpOperand(left),
       this.getInOperands(left),
       this.getLikeOperand(left),

@@ -51,7 +51,7 @@ export class ParserBase {
     return null
   }
 
-  protected searchNode (...parsers: (() => TAst | null)[]) {
+  protected searchNode <Type = TAst> (...parsers: (() => Type | null)[]) {
     const { position: startPosition } = this
 
     for (const parser of parsers) {

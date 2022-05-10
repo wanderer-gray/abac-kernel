@@ -1,38 +1,23 @@
 import { TObject } from './Type'
 import { ABAC } from './ABAC'
-import { Namespace } from './Namespace'
 
 export class Context {
   private readonly data: TObject
-
-  private namespace: Namespace
+  private readonly abac: ABAC
 
   constructor ({
-    abac,
-    data
+    data,
+    abac
   }: {
-    abac: ABAC,
-    data: TObject
+    data: TObject,
+    abac: ABAC
   }) {
     this.data = data
-
-    this.namespace = abac.defaultNamespace
+    this.abac = abac
   }
 
   getData () {
     return this.data
-  }
-
-  setNamespace (namespace: Namespace) {
-    this.namespace = namespace
-  }
-
-  getAttribute (name: string) {
-    return this.namespace.getAttribute(name)
-  }
-
-  getFunction (name: string) {
-    return this.namespace.getFunction(name)
   }
 
   then () {

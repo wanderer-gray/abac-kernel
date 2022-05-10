@@ -1,7 +1,7 @@
 import { TAst } from './Ast'
+import { Namespace } from './Namespace'
 import { Context } from './context'
 import { Executor } from './Executor'
-import { TResult } from './Result'
 
 export class Condition {
   readonly name: string
@@ -18,17 +18,7 @@ export class Condition {
     this.ast = ast
   }
 
-  async execute (context: Context) : Promise<TResult> {
-    try {
-      const result = await Executor.Execute(this.ast, context)
-
-      if (result) {
-        return 'permit'
-      }
-
-      return 'deny'
-    } catch {
-      return 'error'
-    }
+  execute (namespace: Namespace, context: Context) {
+    return Executor.Execute(this.ast, namespace, context)
   }
 }

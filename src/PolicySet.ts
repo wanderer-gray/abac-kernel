@@ -1,23 +1,37 @@
-import { Condition } from './Condition'
+import { Target } from './Target'
+import { TEffectСomplex } from './Effect'
 import { Policy } from './Policy'
+import { Namespace } from './Namespace'
 import { Context } from './context'
-import { TResult } from './Result'
+import {
+  IExecute,
+  TAlgorithmPolicy,
+  handlerPermit,
+  handlerError
+} from './Algorithm'
 
-export class PolicySet {
+export class PolicySet implements IExecute {
   readonly name: string
-  private readonly target: Condition
-
-  private readonly policies: Map<string, Policy> = new Map()
+  private readonly target: Target
+  private readonly algorithm: TAlgorithmPolicy
+  private readonly policies: Policy[] = []
+  private readonly namespace?: Namespace
 
   constructor ({
     name,
-    target
+    target,
+    algorithm,
+    namespace
   }: {
     name: string,
-    target: Condition
+    target: Target,
+    algorithm: TAlgorithmPolicy,
+    namespace?: Namespace
   }) {
     this.name = name
     this.target = target
+    this.algorithm = algorithm
+    this.namespace = namespace
   }
 
   private error (message: string): never {
@@ -25,7 +39,7 @@ export class PolicySet {
   }
 
   private hasPolicy (name: string) {
-    return this.policies.has(name)
+    return this.policies.some((policy) => policy.name === name)
   }
 
   private assertPolicy (policy: Policy) {
@@ -39,18 +53,34 @@ export class PolicySet {
   addPolicy (policy: Policy) {
     this.assertPolicy(policy)
 
-    this.policies.set(policy.name, policy)
+    this.policies.push(policy)
 
     return this
   }
 
-  async execute (context: Context): Promise<TResult> {
-    const target = await this.target.execute(context)
+  private handlerDeny = () => {
+    return <TEffectСomplex>'none'
+  }
 
-    if (!target) {
-      return 'none'
-    }
+  private handlerError = async (namespace: Namespace, context: Context) => {
+    return handlerError(this.algorithm, this.policies, this.namespace ?? namespace, context)
+  }
 
-    return 'permit'
+  executeTarget = async (namespace: Namespace, context: Context) => {
+    return this.target.execute(this.namespace ?? namespace, context)
+  }
+
+  executeElements = async (namespace: Namespace, context: Context) => {
+    return handlerPermit(this.algorithm, this.policies, this.namespace ?? namespace, context)
+  }
+
+  async execute (namespace: Namespace, context: Context) {
+    const result = await this.executeTarget(namespace, context)
+
+    return {
+      permit: this.executeElements,
+      deny: this.handlerDeny,
+      error: this.handlerError
+    }[result](namespace, context)
   }
 }

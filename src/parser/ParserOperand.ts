@@ -3,12 +3,19 @@ import {
   TAst,
   TAstAttribute,
   TAstFunction,
+  TAstProp,
+  TAstPropGet,
+  TAstPropIndex,
   TAstOpBin
 } from '../Ast'
 import { ParserValue } from './ParserValue'
 
 export class ParserOperand extends ParserValue {
-  private getBind () {
+  private getNameQuot () {
+    return this.readString('"')
+  }
+
+  private getNameLetter () {
     if (!isLetter(this.peek())) {
       return null
     }
@@ -24,8 +31,15 @@ export class ParserOperand extends ParserValue {
     return name
   }
 
+  private getName () {
+    return this.searchNode(
+      this.getNameQuot,
+      this.getNameLetter
+    )
+  }
+
   private getAttribute = () => {
-    const name = this.getBind()
+    const name = this.getName()
 
     if (!name || this.searchIText('(')) {
       return null
@@ -38,7 +52,7 @@ export class ParserOperand extends ParserValue {
   }
 
   private getFunction = () => {
-    const name = this.getBind()
+    const name = this.getName()
 
     if (!name || !this.searchIText('(')) {
       return null
@@ -73,6 +87,59 @@ export class ParserOperand extends ParserValue {
     }
   }
 
+  private getPropGet = (value: TAst) => {
+    return () => {
+      if (!this.searchIText('.')) {
+        return null
+      }
+
+      const name = this.getName()
+
+      if (!name) {
+        this.error('Expected prop name')
+      }
+
+      return <TAstPropGet>{
+        class: 'prop',
+        type: 'get',
+        name,
+        value
+      }
+    }
+  }
+
+  private getPropIndex = (value: TAst) => {
+    return () => {
+      if (!this.searchIText('[')) {
+        return null
+      }
+
+      const index = this.getInteger()
+
+      if (index === null) {
+        this.error('Expected prop index')
+      }
+
+      if (!this.searchIText(']')) {
+        this.error('Expected rbrack')
+      }
+
+      return <TAstPropIndex>{
+        class: 'prop',
+        type: 'index',
+        index,
+        value
+      }
+    }
+  }
+
+  private getProp = (value: TAst) => {
+    return this.searchNode<TAstProp>(
+      this.getPropGet(value),
+      this.getPropIndex(value)
+    )
+  }
+
   private getGroup = () => {
     if (!this.searchIText('(')) {
       return null
@@ -92,12 +159,26 @@ export class ParserOperand extends ParserValue {
   }
 
   private getTerm () {
-    return this.searchNode(
+    let value = this.searchNode(
       this.getValue,
       this.getAttribute,
       this.getFunction,
       this.getGroup
     )
+
+    if (!value) {
+      return null
+    }
+
+    for (;;) {
+      const prop = this.getProp(value)
+
+      if (!prop) {
+        return value
+      }
+
+      value = prop
+    }
   }
 
   private getFactor () {

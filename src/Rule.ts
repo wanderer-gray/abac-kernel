@@ -1,56 +1,76 @@
 import { Target } from './Target'
+import {
+  TEffect,
+  TEffectСomplex
+} from './Effect'
 import { Condition } from './Condition'
+import { Namespace } from './Namespace'
 import { Context } from './context'
-import { TResult } from './Result'
+import { IExecute } from './Algorithm'
 
-export class Rule {
+export class Rule implements IExecute {
   readonly name: string
-  private readonly target: Target
-
-  private readonly conditions: Map<string, Condition> = new Map()
+  private readonly effect: TEffect
+  private readonly target?: Target
+  private readonly condition: Condition
+  private readonly namespace?: Namespace
 
   constructor ({
     name,
-    target
+    effect,
+    target,
+    condition,
+    namespace
   }: {
     name: string,
-    target: Target
+    effect: TEffect,
+    target?: Target,
+    condition: Condition
+    namespace?: Namespace
   }) {
     this.name = name
+    this.effect = effect
     this.target = target
+    this.condition = condition
+    this.namespace = namespace
   }
 
-  private error (message: string): never {
-    throw new Error(`Rule[${this.name}]: ${message}`)
+  private handlerDeny = () => {
+    return <TEffectСomplex>'none'
   }
 
-  private hasCondition (name: string) {
-    return this.conditions.has(name)
+  private handlerError = () => {
+    return <TEffectСomplex>{
+      permit: 'error_p',
+      deny: 'error_d'
+    }[this.effect]
   }
 
-  private assertCondition (condition: Condition) {
-    const conditionName = condition.name
-
-    if (this.hasCondition(conditionName)) {
-      this.error(`Condition "${conditionName}" exists`)
-    }
+  private handlerConditionPermit = () => {
+    return this.effect
   }
 
-  addCondition (condition: Condition) {
-    this.assertCondition(condition)
-
-    this.conditions.set(condition.name, condition)
-
-    return this
+  executeTarget = async (namespace: Namespace, context: Context) => {
+    return this.target?.execute(this.namespace ?? namespace, context) ?? 'permit'
   }
 
-  async execute (context: Context): Promise<TResult> {
-    const target = await this.target.execute(context)
+  executeElements = async (namespace: Namespace, context: Context) => {
+    const result = await this.condition.execute(this.namespace ?? namespace, context)
 
-    if (!target) {
-      return 'none'
-    }
+    return {
+      permit: this.handlerConditionPermit,
+      deny: this.handlerDeny,
+      error: this.handlerError
+    }[result]()
+  }
 
-    return 'permit'
+  async execute (namespace: Namespace, context: Context) {
+    const result = await this.executeTarget(namespace, context)
+
+    return {
+      permit: this.executeElements,
+      deny: this.handlerDeny,
+      error: this.handlerError
+    }[result](namespace, context)
   }
 }

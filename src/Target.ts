@@ -1,4 +1,5 @@
 import { TAst } from './Ast'
+import { Namespace } from './Namespace'
 import { Context } from './Context'
 import { Executor } from './Executor'
 
@@ -9,11 +10,7 @@ export class Target {
     this.ast = ast
   }
 
-  async execute (context: Context) {
-    try {
-      return await Executor.Execute(this.ast, context)
-    } catch {
-      return false
-    }
+  execute (namespace: Namespace, context: Context) {
+    return Executor.Execute(this.ast, namespace, context)
   }
 }

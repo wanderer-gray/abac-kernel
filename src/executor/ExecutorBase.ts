@@ -12,6 +12,7 @@ import {
   TAstValue,
   TAstOp,
   TAstOpBool,
+  TAstProp,
   assertIsAstValue,
   assertIsAstValueNull,
   assertIsAstValueBoolean,
@@ -29,16 +30,22 @@ import {
   assertIsAstOpBool,
   assertIsAstOpBoolNot,
   assertIsAstOpBoolAnd,
-  assertIsAstOpBoolOr
+  assertIsAstOpBoolOr,
+  assertIsAstProp,
+  assertIsAstPropGet,
+  assertIsAstPropIndex
 } from '../Ast'
+import { Namespace } from '../Namespace'
 import { Context } from '../Context'
 
 class ExecutorBase {
   protected readonly ast: TAst
+  protected readonly namespace: Namespace
   protected readonly context: Context
 
-  constructor (ast: TAst, context: Context) {
+  constructor (ast: TAst, namespace: Namespace, context: Context) {
     this.ast = ast
+    this.namespace = namespace
     this.context = context
   }
 
@@ -76,21 +83,66 @@ class ExecutorBase {
   }
 
   private getAstAttribute = (ast: TAst) => {
-    const { context } = this
-
     const astAttr = assertIsAstAttribute(ast)
 
-    return context.getAttribute(astAttr.name).get(context)
+    const attr = this.namespace.getAttribute(astAttr.name)
+
+    return attr.get(this.context)
   }
 
   private execAstFunction = async (ast: TAst) => {
     const astFunc = assertIsAstFunction(ast)
 
-    const func = this.context.getFunction(astFunc.name)
+    const func = this.namespace.getFunction(astFunc.name)
 
     const args = await Promise.all(astFunc.args.map(this.execute))
 
     return func.exec(args)
+  }
+
+  private execAstPropGet = async (astProp: TAstProp) => {
+    const astPropGet = assertIsAstPropGet(astProp)
+
+    const value = await this.execute(astPropGet.value)
+
+    if (!isObject(value)) {
+      this.error('Expected value object')
+    }
+
+    const { name } = astPropGet
+
+    if (!(name in value)) {
+      this.error('Object does not contain a property')
+    }
+
+    return value[name]
+  }
+
+  private execAstPropIndex = async (astProp: TAstProp) => {
+    const astPropIndex = assertIsAstPropIndex(astProp)
+
+    const value = await this.execute(astPropIndex.value)
+
+    if (!isArray(value)) {
+      this.error('Expected value array')
+    }
+
+    const { index } = astPropIndex
+
+    if (index < 0 || index >= value.length) {
+      this.error('index out of range')
+    }
+
+    return value[index]
+  }
+
+  private execAstProp = (ast: TAst) => {
+    const astProp = assertIsAstProp(ast)
+
+    return {
+      get: this.execAstPropGet,
+      index: this.execAstPropIndex
+    }[astProp.type](astProp)
   }
 
   private execAstOpBinAdd = async (astLeft: TAst, astRight: TAst) => {
@@ -469,6 +521,7 @@ class ExecutorBase {
       value: this.getAstValue,
       attribute: this.getAstAttribute,
       function: this.execAstFunction,
+      prop: this.execAstProp,
       op: this.execAstOp
     }[ast.class](ast)
   }

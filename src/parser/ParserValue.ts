@@ -5,6 +5,7 @@ import {
   iTrue
 } from '../Word'
 import {
+  TAstValue,
   TAstValueNull,
   TAstValueBoolean,
   TAstValueNumber,
@@ -13,6 +14,36 @@ import {
 import { ParserBase } from './ParserBase'
 
 export class ParserValue extends ParserBase {
+  protected readString(sep: string) {
+    if (this.peek() !== sep) {
+      return null
+    }
+
+    this.next()
+
+    let value = ''
+
+    for (; !this.eof() && this.peek() !== sep; this.next()) {
+      if (this.peek() === '/') {
+        this.next()
+
+        const expected = ['/', sep].includes(this.peek())
+
+        if (!expected) {
+          this.error(`Expected '/' or '${sep}'`)
+        }
+      }
+
+      value += this.peek()
+    }
+
+    if (!this.searchIText(sep)) {
+      this.error(`Expected '${sep}'`)
+    }
+
+    return value
+  }
+
   private getNull = () => {
     if (!this.searchIText(iNull)) {
       return null
@@ -38,6 +69,20 @@ export class ParserValue extends ParserBase {
     }
   }
 
+  protected getInteger = () => {
+    let value = ''
+
+    for (; isDigit(this.peek()); this.next()) {
+      value += this.peek()
+    }
+
+    if (!value) {
+      return null
+    }
+
+    return +value
+  }
+
   private getNumber = () => {
     let value = ''
 
@@ -57,6 +102,8 @@ export class ParserValue extends ParserBase {
       return null
     }
 
+    this.skip()
+
     return <TAstValueNumber>{
       class: 'value',
       type: 'number',
@@ -65,29 +112,11 @@ export class ParserValue extends ParserBase {
   }
 
   private getString = () => {
-    if (!this.searchIText('\'')) {
+    const value = this.readString('\'')
+
+    if (!value) {
       return null
     }
-
-    let value = ''
-
-    for (; ;) {
-      for (; !this.eof() && this.peek() !== '\''; this.next()) {
-        value += this.peek()
-      }
-
-      if (!this.searchIText('\''.repeat(2))) {
-        break
-      }
-
-      value += '\''
-    }
-
-    if (!this.searchIText('\'')) {
-      this.error('Expected apos')
-    }
-
-    this.skip()
 
     return <TAstValueString>{
       class: 'value',
@@ -97,7 +126,7 @@ export class ParserValue extends ParserBase {
   }
 
   protected getValue = () => {
-    return this.searchNode(
+    return this.searchNode<TAstValue>(
       this.getNull,
       this.getBoolean,
       this.getNumber,

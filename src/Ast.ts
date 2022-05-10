@@ -1,7 +1,7 @@
 import { isObject } from './Type'
 
 type TAst = {
-  class: 'value' | 'attribute' | 'function' | 'op',
+  class: 'value' | 'attribute' | 'function' | 'op' | 'prop'
   type: string
 }
 
@@ -36,6 +36,22 @@ type TAstFunction = TAst & {
   class: 'function',
   name: string,
   args: TAst[]
+}
+
+type TAstProp = TAst & {
+  class: 'prop',
+  type: 'get' | 'index',
+  value: TAst
+}
+
+type TAstPropGet = TAstProp & {
+  type: 'get',
+  name: string
+}
+
+type TAstPropIndex = TAstProp & {
+  type: 'index',
+  index: number
 }
 
 type TAstOp = TAst & {
@@ -157,6 +173,18 @@ function isAstAttribute (ast: TAst): ast is TAstAttribute {
 
 function isAstFunction (ast: TAst): ast is TAstFunction {
   return ast.class === 'function'
+}
+
+function isAstProp (ast: TAst): ast is TAstProp {
+  return ast.class === 'prop'
+}
+
+function isAstPropGet (ast: TAstProp): ast is TAstPropGet {
+  return ast.type === 'get'
+}
+
+function isAstPropIndex (ast: TAstProp): ast is TAstPropIndex {
+  return ast.type === 'index'
 }
 
 function isAstOp (ast: TAst): ast is TAstOp {
@@ -313,6 +341,30 @@ function assertIsAstAttribute (ast: TAst, message: string = 'Is not a AstAttribu
 
 function assertIsAstFunction (ast: TAst, message: string = 'Is not a AstFunction') {
   if (!isAstFunction(ast)) {
+    error(message)
+  }
+
+  return ast
+}
+
+function assertIsAstProp (ast: TAst, message: string = 'Is not a AstProp') {
+  if (!isAstProp(ast)) {
+    error(message)
+  }
+
+  return ast
+}
+
+function assertIsAstPropGet (ast: TAstProp, message: string = 'Is not a AstPropGet') {
+  if (!isAstPropGet(ast)) {
+    error(message)
+  }
+
+  return ast
+}
+
+function assertIsAstPropIndex (ast: TAstProp, message: string = 'Is not a AstPropIndex') {
+  if (!isAstPropIndex(ast)) {
     error(message)
   }
 
@@ -512,6 +564,9 @@ export {
   TAstValueString,
   TAstAttribute,
   TAstFunction,
+  TAstProp,
+  TAstPropGet,
+  TAstPropIndex,
   TAstOp,
   TAstOpBin,
   TAstOpBinAdd,
@@ -543,6 +598,9 @@ export {
   isAstValueString,
   isAstAttribute,
   isAstFunction,
+  isAstProp,
+  isAstPropGet,
+  isAstPropIndex,
   isAstOp,
   isAstOpBin,
   isAstOpBinAdd,
@@ -574,6 +632,9 @@ export {
   assertIsAstValueString,
   assertIsAstAttribute,
   assertIsAstFunction,
+  assertIsAstProp,
+  assertIsAstPropGet,
+  assertIsAstPropIndex,
   assertIsAstOp,
   assertIsAstOpBin,
   assertIsAstOpBinAdd,

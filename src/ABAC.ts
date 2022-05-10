@@ -4,45 +4,19 @@ import { PolicySet } from './PolicySet'
 import { Context } from './Context'
 
 export class ABAC {
-  readonly defaultNamespace: Namespace
-  private readonly namespaces: Map<string, Namespace> = new Map()
+  readonly namespace: Namespace
   private readonly policySets: Map<string, PolicySet> = new Map()
 
   constructor ({
-    defaultNamespace
+    namespace
   }: {
-    defaultNamespace: Namespace
+    namespace: Namespace
   }) {
-    this.defaultNamespace = defaultNamespace
+    this.namespace = namespace
   }
 
   private error (message: string): never {
     throw new Error(`ABAC: ${message}`)
-  }
-
-  private hasNamespace (name: string) {
-    return this.namespaces.has(name)
-  }
-
-  private assertNamespace (namespace: Namespace) {
-    const namespaceName = namespace.name
-
-    if (this.hasNamespace(namespaceName)) {
-      this.error(`Namespace "${namespaceName}" exists`)
-    }
-  }
-
-  addNamespace (namespace: Namespace) {
-    this.assertNamespace(namespace)
-
-    this.namespaces.set(namespace.name, namespace)
-
-    return this
-  }
-
-  // Может вернуть пространство имён по умолчанию
-  getNamespace (name: string) {
-    return this.namespaces.get(name) || this.defaultNamespace
   }
 
   private hasPolicySet (name: string) {
