@@ -26,7 +26,7 @@ export class ParserExpression extends ParserOperand {
   private getCmpOperand = (left: TAst) => {
     return () => {
       const op = this.searchIText(
-        '=',
+        '==',
         '!=',
         '<=',
         '<',

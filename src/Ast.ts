@@ -80,12 +80,12 @@ type TAstOpBinFloorDiv = TAstOpBin & { op: '//' }
 
 type TAstOpCmp = TAstOp & {
   type: 'cmp',
-  op: '=' | '!=' | '<' | '<=' | '>' | '>=',
+  op: '==' | '!=' | '<' | '<=' | '>' | '>=',
   left: TAst,
   right: TAst
 }
 
-type TAstOpCmpEq = TAstOpCmp & { op: '=' }
+type TAstOpCmpEq = TAstOpCmp & { op: '==' }
 
 type TAstOpCmpNotEq = TAstOpCmp & { op: '!=' }
 
@@ -224,7 +224,7 @@ function isAstOpCmp (ast: TAstOp): ast is TAstOpCmp {
 }
 
 function isAstOpCmpEq (ast: TAstOpCmp): ast is TAstOpCmpEq {
-  return ast.op === '='
+  return ast.op === '=='
 }
 
 function isAstOpCmpNotEq (ast: TAstOpCmp): ast is TAstOpCmpNotEq {

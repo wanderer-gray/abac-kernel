@@ -340,7 +340,7 @@ class ExecutorBase {
     ])
 
     return {
-      '=': this.Eq,
+      '==': this.Eq,
       '!=': this.NotEq,
       '<': this.Lt,
       '<=': this.LtE,
