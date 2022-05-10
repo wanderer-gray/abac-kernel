@@ -159,14 +159,12 @@ async function executeOnlyOneApplicable (elements: IExecute[], namespace: Namesp
     switch (appResult) {
       case 'permit':
         if (appElement) {
-          // Не точно!!!
           return 'error_pd'
         }
 
         appElement = element
         break
       case 'error':
-        // Не точно!!!
         return 'error_pd'
     }
   }
@@ -210,7 +208,7 @@ async function executePermitUnlessDeny (elements: IExecute[], namespace: Namespa
   return 'permit'
 }
 
-function handlerPermit (algorithm: TAlgorithmRule | TAlgorithmPolicy, elements: IExecute[], namespace: Namespace, context: Context) {
+function executeElements (algorithm: TAlgorithmRule | TAlgorithmPolicy, elements: IExecute[], namespace: Namespace, context: Context) {
   return {
     'deny-overrides': executeDenyOverrides,
     'permit-overrides': executePermitOverrides,
@@ -224,7 +222,7 @@ function handlerPermit (algorithm: TAlgorithmRule | TAlgorithmPolicy, elements: 
 }
 
 async function handlerError (algorithm: TAlgorithmRule | TAlgorithmPolicy, elements: IExecute[], namespace: Namespace, context: Context) {
-  const result = await handlerPermit(algorithm, elements, namespace, context)
+  const result = await executeElements(algorithm, elements, namespace, context)
 
   return <TEffectСomplex>{
     permit: 'error_p',
@@ -240,6 +238,6 @@ export {
   IExecute,
   TAlgorithmRule,
   TAlgorithmPolicy,
-  handlerPermit,
+  executeElements,
   handlerError
 }

@@ -2,17 +2,18 @@ import { TObject } from './Type'
 import { Namespace } from './Namespace'
 import { PolicySet } from './PolicySet'
 import { Context } from './Context'
+import { executeElements } from './Algorithm'
 
 export class ABAC {
-  readonly namespace: Namespace
-  private readonly policySets: Map<string, PolicySet> = new Map()
+  readonly defaultNamespace: Namespace
+  private readonly policySets: PolicySet[] = []
 
   constructor ({
-    namespace
+    defaultNamespace
   }: {
-    namespace: Namespace
+    defaultNamespace: Namespace
   }) {
-    this.namespace = namespace
+    this.defaultNamespace = defaultNamespace
   }
 
   private error (message: string): never {
@@ -20,7 +21,7 @@ export class ABAC {
   }
 
   private hasPolicySet (name: string) {
-    return this.policySets.has(name)
+    return this.policySets.some((policySet) => policySet.name === name)
   }
 
   private assertPolicySet (policySet: PolicySet) {
@@ -34,15 +35,19 @@ export class ABAC {
   addPolicySet (policySet: PolicySet) {
     this.assertPolicySet(policySet)
 
-    this.policySets.set(policySet.name, policySet)
+    this.policySets.push(policySet)
 
     return this
   }
 
+  execute (context: Context) {
+    return executeElements('only-one-applicable', this.policySets, this.defaultNamespace, context)
+  }
+
   Context (data: TObject) {
     return new Context({
-      abac: this,
-      data
+      data,
+      abac: this
     })
   }
 }

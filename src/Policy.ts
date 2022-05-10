@@ -6,7 +6,7 @@ import { Context } from './context'
 import {
   IExecute,
   TAlgorithmRule,
-  handlerPermit,
+  executeElements,
   handlerError
 } from './Algorithm'
 
@@ -71,7 +71,7 @@ export class Policy implements IExecute {
   }
 
   executeElements = async (namespace: Namespace, context: Context) => {
-    return handlerPermit(this.algorithm, this.rules, this.namespace ?? namespace, context)
+    return executeElements(this.algorithm, this.rules, this.namespace ?? namespace, context)
   }
 
   async execute (namespace: Namespace, context: Context) {

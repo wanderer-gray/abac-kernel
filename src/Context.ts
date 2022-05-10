@@ -20,7 +20,14 @@ export class Context {
     return this.data
   }
 
-  then () {
-    return Promise.resolve()
+  then (resolve: (value: unknown) => void, reject: (reason?: any) => void) {
+    return this.abac.execute(this)
+      .then(resolve)
+      .catch(reject)
+  }
+
+  catch (reject: (reason?: any) => void) {
+    return this.abac.execute(this)
+      .catch(reject)
   }
 }

@@ -1,16 +1,18 @@
 {
-  "name": "abac",
+  "name": "abac-kernel",
   "version": "1.0.0",
-  "description": "ABAC",
-  "main": "index.js",
+  "description": "Kernel ABAC",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
   "scripts": {
     "build": "npx tsc",
     "start": "node ./dist",
     "test": "npx jest"
   },
-  "keywords": [],
   "author": "meerkat",
-  "license": "ISC",
   "devDependencies": {
     "@types/jest": "^27.4.1",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
