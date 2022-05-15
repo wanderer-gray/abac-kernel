@@ -11,11 +11,11 @@ import {
 import { ParserValue } from './ParserValue'
 
 export class ParserOperand extends ParserValue {
-  private getNameQuot () {
+  private getNameQuot = () => {
     return this.readString('"')
   }
 
-  private getNameLetter () {
+  private getNameLetter = () => {
     if (!isLetter(this.peek())) {
       return null
     }

@@ -1,5 +1,6 @@
 import { TObject } from './Type'
 import { ABAC } from './ABAC'
+import { TEffectСomplex } from './Effect'
 
 export class Context {
   private readonly data: TObject
@@ -20,13 +21,13 @@ export class Context {
     return this.data
   }
 
-  then (resolve: (value: unknown) => void, reject: (reason?: any) => void) {
+  then (resolve: (value: TEffectСomplex) => void, reject: (reason?: Error) => void) {
     return this.abac.execute(this)
       .then(resolve)
       .catch(reject)
   }
 
-  catch (reject: (reason?: any) => void) {
+  catch (reject: (reason?: Error) => void) {
     return this.abac.execute(this)
       .catch(reject)
   }
