@@ -10,6 +10,13 @@ import {
   handlerError
 } from './Algorithm'
 
+type TConfig = {
+  name: string,
+  target: Target,
+  algorithm: TAlgorithmRule,
+  namespace?: Namespace
+}
+
 export class Policy implements IExecute {
   readonly name: string
   private readonly target: Target
@@ -17,17 +24,7 @@ export class Policy implements IExecute {
   private readonly rules: Rule[] = []
   private readonly namespace?: Namespace
 
-  constructor ({
-    name,
-    target,
-    algorithm,
-    namespace
-  }: {
-    name: string,
-    target: Target,
-    algorithm: TAlgorithmRule,
-    namespace?: Namespace
-  }) {
+  constructor ({ name, target, algorithm, namespace }: TConfig) {
     this.name = name
     this.target = target
     this.algorithm = algorithm
@@ -38,20 +35,16 @@ export class Policy implements IExecute {
     throw new Error(`Policy[${this.name}]: ${message}`)
   }
 
-  private hasRule (name: string) {
+  hasRule (name: string) {
     return this.rules.some((rule) => rule.name === name)
   }
 
-  private assertRule (rule: Rule) {
+  addRule (rule: Rule) {
     const ruleName = rule.name
 
     if (this.hasRule(ruleName)) {
       this.error(`Rule "${ruleName}" exists`)
     }
-  }
-
-  addRule (rule: Rule) {
-    this.assertRule(rule)
 
     this.rules.push(rule)
 
@@ -62,15 +55,15 @@ export class Policy implements IExecute {
     return <TEffectСomplex>'none'
   }
 
-  private handlerError = async (namespace: Namespace, context: Context) => {
+  private handlerError = (namespace: Namespace, context: Context) => {
     return handlerError(this.algorithm, this.rules, this.namespace ?? namespace, context)
   }
 
-  executeTarget = async (namespace: Namespace, context: Context) => {
+  executeTarget = (namespace: Namespace, context: Context) => {
     return this.target.execute(this.namespace ?? namespace, context)
   }
 
-  executeElements = async (namespace: Namespace, context: Context) => {
+  executeElements = (namespace: Namespace, context: Context) => {
     return executeElements(this.algorithm, this.rules, this.namespace ?? namespace, context)
   }
 
@@ -82,5 +75,9 @@ export class Policy implements IExecute {
       deny: this.handlerDeny,
       error: this.handlerError
     }[result](namespace, context)
+  }
+
+  static make (config: TConfig) {
+    return new Policy(config)
   }
 }

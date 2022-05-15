@@ -2,17 +2,19 @@ import { TObject } from './Type'
 import { ABAC } from './ABAC'
 import { TEffectСomplex } from './Effect'
 
-export class Context {
-  private readonly data: TObject
-  private readonly abac: ABAC
+type TResolve = (value: TEffectСomplex) => void
+type TReject = (reason?: Error) => void
 
-  constructor ({
-    data,
-    abac
-  }: {
-    data: TObject,
-    abac: ABAC
-  }) {
+type TConfig = {
+  abac: ABAC,
+  data: TObject
+}
+
+export class Context {
+  private readonly abac: ABAC
+  private readonly data: TObject
+
+  constructor ({ abac, data }: TConfig) {
     this.data = data
     this.abac = abac
   }
@@ -21,14 +23,18 @@ export class Context {
     return this.data
   }
 
-  then (resolve: (value: TEffectСomplex) => void, reject: (reason?: Error) => void) {
+  then (resolve: TResolve, reject: TReject) {
     return this.abac.execute(this)
       .then(resolve)
       .catch(reject)
   }
 
-  catch (reject: (reason?: Error) => void) {
+  catch (reject: TReject) {
     return this.abac.execute(this)
       .catch(reject)
+  }
+
+  static make (config: TConfig) {
+    return new Context(config)
   }
 }

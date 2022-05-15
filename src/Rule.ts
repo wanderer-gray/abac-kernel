@@ -8,6 +8,14 @@ import { Namespace } from './Namespace'
 import { Context } from './context'
 import { IExecute } from './Algorithm'
 
+type TConfig = {
+  name: string,
+  effect: TEffect,
+  target?: Target,
+  condition: Condition,
+  namespace?: Namespace
+}
+
 export class Rule implements IExecute {
   readonly name: string
   private readonly effect: TEffect
@@ -15,19 +23,7 @@ export class Rule implements IExecute {
   private readonly condition: Condition
   private readonly namespace?: Namespace
 
-  constructor ({
-    name,
-    effect,
-    target,
-    condition,
-    namespace
-  }: {
-    name: string,
-    effect: TEffect,
-    target?: Target,
-    condition: Condition
-    namespace?: Namespace
-  }) {
+  constructor ({ name, effect, target, condition, namespace }: TConfig) {
     this.name = name
     this.effect = effect
     this.target = target
@@ -72,5 +68,9 @@ export class Rule implements IExecute {
       deny: this.handlerDeny,
       error: this.handlerError
     }[result](namespace, context)
+  }
+
+  static make (config: TConfig) {
+    return new Rule(config)
   }
 }

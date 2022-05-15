@@ -3,22 +3,25 @@ import { Namespace } from './Namespace'
 import { Context } from './context'
 import { Executor } from './Executor'
 
+type TConfig = {
+  name: string,
+  code: TAst
+}
+
 export class Condition {
   readonly name: string
-  private readonly ast: TAst
+  private readonly code: TAst
 
-  constructor ({
-    name,
-    ast
-  }: {
-    name: string,
-    ast: TAst
-  }) {
+  constructor ({ name, code }: TConfig) {
     this.name = name
-    this.ast = ast
+    this.code = code
   }
 
   execute (namespace: Namespace, context: Context) {
-    return Executor.Execute(this.ast, namespace, context)
+    return Executor.Execute(this.code, namespace, context)
+  }
+
+  static make (config: TConfig) {
+    return new Condition(config)
   }
 }

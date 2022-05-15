@@ -3,24 +3,23 @@ import { Namespace } from './Namespace'
 import { PolicySet } from './PolicySet'
 import { Context } from './Context'
 import {
-  TAlgorithmPolicy,
+  TAlgorithm,
   executeElements
 } from './Algorithm'
 
+type TConfig = {
+  namespace: Namespace
+  algorithm?: TAlgorithm
+}
+
 export class ABAC {
   private readonly namespace: Namespace
-  private readonly algorithm: TAlgorithmPolicy
+  private readonly algorithm: TAlgorithm
   private readonly policySets: PolicySet[] = []
 
-  constructor ({
-    namespace,
-    algorithm = 'only-one-applicable'
-  }: {
-    namespace: Namespace
-    algorithm?: TAlgorithmPolicy
-  }) {
+  constructor ({ namespace, algorithm = 'only-one-applicable' }: TConfig) {
     if (namespace.root !== undefined) {
-      this.error('namespace should not have a dependency')
+      this.error('Namespace should not have a dependency')
     }
 
     this.namespace = namespace
@@ -31,20 +30,16 @@ export class ABAC {
     throw new Error(`ABAC: ${message}`)
   }
 
-  private hasPolicySet (name: string) {
+  hasPolicySet (name: string) {
     return this.policySets.some((policySet) => policySet.name === name)
   }
 
-  private assertPolicySet (policySet: PolicySet) {
+  addPolicySet (policySet: PolicySet) {
     const policySetName = policySet.name
 
     if (this.hasPolicySet(policySetName)) {
       this.error(`PolicySet "${policySetName}" exists`)
     }
-  }
-
-  addPolicySet (policySet: PolicySet) {
-    this.assertPolicySet(policySet)
 
     this.policySets.push(policySet)
 
@@ -56,9 +51,10 @@ export class ABAC {
   }
 
   Context (data: TObject) {
-    return new Context({
-      data,
-      abac: this
-    })
+    return Context.make({ abac: this, data })
+  }
+
+  static make (config: TConfig) {
+    return new ABAC(config)
   }
 }

@@ -3,26 +3,28 @@ import {
   TObject,
   isObject
 } from './Type'
-import * as Schema from './Schema'
+import {
+  TSchema,
+  verify
+} from './Schema'
 import { Context } from './context'
+
+type TComputer = (data: TObject) => Promise<TSupport>
+
+type TConfig = {
+  name: string,
+  path: string[],
+  schema: TSchema,
+  computer?: TComputer
+}
 
 export class Attribute {
   readonly name: string
   private readonly path: string[]
-  private readonly schema: Schema.TSchema
-  private readonly computer?: (data: TObject) => Promise<TSupport>
+  private readonly schema: TSchema
+  private readonly computer?: TComputer
 
-  constructor ({
-    name,
-    path,
-    schema,
-    computer
-  }: {
-    name: string,
-    path: string[],
-    schema: Schema.TSchema,
-    computer?: (data: TObject) => Promise<TSupport>
-  }) {
+  constructor ({ name, path, schema, computer }: TConfig) {
     this.name = name
     this.path = path
     this.schema = schema
@@ -31,12 +33,6 @@ export class Attribute {
 
   private error (message: string): never {
     throw new Error(`Argument[${this.name}]: ${message}`)
-  }
-
-  private assertValue (value: TSupport) {
-    if (!Schema.verify(value, this.schema)) {
-      this.error(`Invalid value: ${value}`)
-    }
   }
 
   private getByPath (data: TObject) {
@@ -90,8 +86,14 @@ export class Attribute {
   async get (context: Context) {
     const value = await this.getValue(context)
 
-    this.assertValue(value)
+    if (!verify(value, this.schema)) {
+      this.error(`Invalid value: ${value}`)
+    }
 
     return value
+  }
+
+  static make (config: TConfig) {
+    return new Attribute(config)
   }
 }

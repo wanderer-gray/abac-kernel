@@ -31,6 +31,8 @@ type TAlgorithmPolicy =
   'deny-unless-permit' |
   'permit-unless-deny'
 
+type TAlgorithm = TAlgorithmRule | TAlgorithmPolicy
+
 async function executeDenyOverrides (elements: IExecute[], namespace: Namespace, context: Context) : Promise<TEffectСomplex> {
   let atLeastOnePermit = false
   let atLeastOneErrorP = false
@@ -208,7 +210,7 @@ async function executePermitUnlessDeny (elements: IExecute[], namespace: Namespa
   return 'permit'
 }
 
-function executeElements (algorithm: TAlgorithmRule | TAlgorithmPolicy, elements: IExecute[], namespace: Namespace, context: Context) {
+function executeElements (algorithm: TAlgorithm, elements: IExecute[], namespace: Namespace, context: Context) {
   return {
     'deny-overrides': executeDenyOverrides,
     'permit-overrides': executePermitOverrides,
@@ -221,21 +223,13 @@ function executeElements (algorithm: TAlgorithmRule | TAlgorithmPolicy, elements
   }[algorithm](elements, namespace, context)
 }
 
-async function handlerError (algorithm: TAlgorithmRule | TAlgorithmPolicy, elements: IExecute[], namespace: Namespace, context: Context) {
-  const result = await executeElements(algorithm, elements, namespace, context)
-
-  return <TEffectСomplex>{
-    permit: 'error_p',
-    deny: 'error_d',
-    none: 'none',
-    error_p: 'error_p',
-    error_d: 'error_d',
-    error_pd: 'error_pd'
-  }[result]
+function handlerError (algorithm: TAlgorithm, elements: IExecute[], namespace: Namespace, context: Context) {
+  return executeElements(algorithm, elements, namespace, context)
 }
 
 export {
   IExecute,
+  TAlgorithm,
   TAlgorithmRule,
   TAlgorithmPolicy,
   executeElements,

@@ -1,6 +1,11 @@
 import { Attribute } from './Attribute'
 import { Function } from './Function'
 
+type TConfig<Namespace> = {
+  name: string,
+  root?: Namespace
+}
+
 export class Namespace {
   readonly name: string
   readonly root?: Namespace
@@ -8,13 +13,7 @@ export class Namespace {
   private readonly attributes: Map<string, Attribute> = new Map()
   private readonly functions: Map<string, Function> = new Map()
 
-  constructor ({
-    name,
-    root
-  }: {
-    name: string,
-    root?: Namespace
-  }) {
+  constructor ({ name, root }: TConfig<Namespace>) {
     this.name = name
     this.root = root
   }
@@ -23,15 +22,15 @@ export class Namespace {
     throw new Error(`Namespace[${this.name}]: ${message}`)
   }
 
-  private hasAttribute (name: string) {
+  hasAttribute (name: string) {
     return this.attributes.has(name)
   }
 
-  private hasFunction (name: string) {
+  hasFunction (name: string) {
     return this.functions.has(name)
   }
 
-  private hasPublicName (name: string) {
+  hasPublicName (name: string) {
     if (this.hasAttribute(name)) {
       return true
     }
@@ -53,7 +52,7 @@ export class Namespace {
     }
   }
 
-  private assertAttribute (attr: Attribute) {
+  addAttribute (attr: Attribute) {
     const attributeName = attr.name
 
     if (this.hasAttribute(attributeName)) {
@@ -61,12 +60,8 @@ export class Namespace {
     }
 
     this.assertPublicName(attributeName)
-  }
 
-  addAttribute (attr: Attribute) {
-    this.assertAttribute(attr)
-
-    this.attributes.set(attr.name, attr)
+    this.attributes.set(attributeName, attr)
 
     return this
   }
@@ -81,7 +76,7 @@ export class Namespace {
     return attr
   }
 
-  private assertFunction (func: Function) {
+  addFunction (func: Function) {
     const functionName = func.name
 
     if (this.hasFunction(functionName)) {
@@ -89,12 +84,8 @@ export class Namespace {
     }
 
     this.assertPublicName(functionName)
-  }
 
-  addFunction (func: Function) {
-    this.assertFunction(func)
-
-    this.functions.set(func.name, func)
+    this.functions.set(functionName, func)
 
     return this
   }
@@ -107,5 +98,9 @@ export class Namespace {
     }
 
     return func
+  }
+
+  static make (config: TConfig<Namespace>) {
+    return new Namespace(config)
   }
 }

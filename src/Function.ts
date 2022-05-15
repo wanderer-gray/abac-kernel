@@ -1,53 +1,35 @@
 import { TSupport } from './Type'
-import * as Schema from './Schema'
+import {
+  TSchema,
+  verify
+} from './Schema'
+
+type TExecutor = (...args: TSupport[]) => Promise<TSupport>
+type TArgsSettings = { schema: TSchema }[]
+type TResultSettings = { schema: TSchema }
+
+type TConfig = {
+  name: string,
+  executor: TExecutor,
+  argsSettings: TArgsSettings,
+  resultSettings: TResultSettings
+}
 
 export class Function {
   readonly name: string
-  private readonly input: { schema: Schema.TSchema }[]
-  private readonly output: { schema: Schema.TSchema }
-  private readonly executor: (...args: TSupport[]) => Promise<TSupport>
+  private readonly executor: TExecutor
+  private readonly argsSettings: TArgsSettings
+  private readonly resultSettings: TResultSettings
 
-  constructor ({
-    name,
-    input,
-    output,
-    executor
-  }: {
-    name: string,
-    input: { schema: Schema.TSchema }[],
-    output: { schema: Schema.TSchema },
-    executor: (...args: TSupport[]) => Promise<TSupport>
-  }) {
+  constructor ({ name, executor, argsSettings, resultSettings }: TConfig) {
     this.name = name
-    this.input = input
-    this.output = output
     this.executor = executor
+    this.argsSettings = argsSettings
+    this.resultSettings = resultSettings
   }
 
   private error (message: string): never {
     throw new Error(`Function[${this.name}]: ${message}`)
-  }
-
-  private assertArgs (args: TSupport[]) {
-    const { input } = this
-
-    if (args.length !== input.length) {
-      this.error(`Expected number of arguments: ${input.length}`)
-    }
-
-    for (let index = 0; index < input.length; index++) {
-      const value = args[index]
-
-      if (!Schema.verify(value, input[index].schema)) {
-        this.error(`Invalid argument (index: ${index}) value: ${value}`)
-      }
-    }
-  }
-
-  private assertResult (result: TSupport) {
-    if (!Schema.verify(result, this.output.schema)) {
-      this.error(`Invalid result: ${result}`)
-    }
   }
 
   private async getResult (args: TSupport[]) {
@@ -59,12 +41,33 @@ export class Function {
   }
 
   async exec (args: TSupport[]) {
-    this.assertArgs(args)
+    const {
+      argsSettings,
+      resultSettings
+    } = this
+
+    if (args.length !== argsSettings.length) {
+      this.error(`Expected number of arguments: ${argsSettings.length}`)
+    }
+
+    for (let index = 0; index < argsSettings.length; index++) {
+      const value = args[index]
+
+      if (!verify(value, argsSettings[index].schema)) {
+        this.error(`Invalid argument (index: ${index}) value: ${value}`)
+      }
+    }
 
     const result = await this.getResult(args)
 
-    this.assertResult(result)
+    if (!verify(result, resultSettings.schema)) {
+      this.error(`Invalid result: ${result}`)
+    }
 
     return result
+  }
+
+  static make (config: TConfig) {
+    return new Function(config)
   }
 }

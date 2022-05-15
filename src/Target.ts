@@ -3,14 +3,22 @@ import { Namespace } from './Namespace'
 import { Context } from './Context'
 import { Executor } from './Executor'
 
-export class Target {
-  private readonly ast: TAst
+type TConfig = {
+  code: TAst
+}
 
-  constructor (ast: TAst) {
-    this.ast = ast
+export class Target {
+  private readonly code: TAst
+
+  constructor ({ code }: TConfig) {
+    this.code = code
   }
 
   execute (namespace: Namespace, context: Context) {
-    return Executor.Execute(this.ast, namespace, context)
+    return Executor.Execute(this.code, namespace, context)
+  }
+
+  static make (config: TConfig) {
+    return new Target(config)
   }
 }
