@@ -3,7 +3,7 @@ import { Function } from './Function'
 
 export class Namespace {
   readonly name: string
-  private readonly root?: Namespace
+  readonly root?: Namespace
 
   private readonly attributes: Map<string, Attribute> = new Map()
   private readonly functions: Map<string, Function> = new Map()

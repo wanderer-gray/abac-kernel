@@ -2,18 +2,29 @@ import { TObject } from './Type'
 import { Namespace } from './Namespace'
 import { PolicySet } from './PolicySet'
 import { Context } from './Context'
-import { executeElements } from './Algorithm'
+import {
+  TAlgorithmPolicy,
+  executeElements
+} from './Algorithm'
 
 export class ABAC {
-  readonly defaultNamespace: Namespace
+  private readonly namespace: Namespace
+  private readonly algorithm: TAlgorithmPolicy
   private readonly policySets: PolicySet[] = []
 
   constructor ({
-    defaultNamespace
+    namespace,
+    algorithm = 'only-one-applicable'
   }: {
-    defaultNamespace: Namespace
+    namespace: Namespace
+    algorithm?: TAlgorithmPolicy
   }) {
-    this.defaultNamespace = defaultNamespace
+    if (namespace.root !== undefined) {
+      this.error('namespace should not have a dependency')
+    }
+
+    this.namespace = namespace
+    this.algorithm = algorithm
   }
 
   private error (message: string): never {
@@ -41,7 +52,7 @@ export class ABAC {
   }
 
   execute (context: Context) {
-    return executeElements('only-one-applicable', this.policySets, this.defaultNamespace, context)
+    return executeElements(this.algorithm, this.policySets, this.namespace, context)
   }
 
   Context (data: TObject) {
