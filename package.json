@@ -8,9 +8,11 @@
     "/dist"
   ],
   "scripts": {
-    "build": "npx tsc",
-    "start": "node ./dist",
-    "test": "npx jest"
+    "start": "node dist",
+    "test": "jest",
+    "build": "tsc",
+    "lint": "eslint src/**",
+    "prepare": "npm run build"
   },
   "author": "meerkat",
   "devDependencies": {

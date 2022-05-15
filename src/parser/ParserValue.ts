@@ -14,7 +14,7 @@ import {
 import { ParserBase } from './ParserBase'
 
 export class ParserValue extends ParserBase {
-  protected readString(sep: string) {
+  protected readString (sep: string) {
     if (this.peek() !== sep) {
       return null
     }
