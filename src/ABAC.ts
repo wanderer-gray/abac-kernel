@@ -51,7 +51,7 @@ export class ABAC {
   }
 
   Context (data: TObject) {
-    return Context.make({ abac: this, data })
+    return Context.new({ abac: this, data })
   }
 
   static new (config: TConfig) {
