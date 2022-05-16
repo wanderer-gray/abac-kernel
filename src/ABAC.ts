@@ -9,7 +9,7 @@ import {
 
 type TConfig = {
   namespace: Namespace
-  algorithm?: TAlgorithm
+  algorithm: TAlgorithm
 }
 
 export class ABAC {
@@ -17,7 +17,7 @@ export class ABAC {
   private readonly algorithm: TAlgorithm
   private readonly policySets: PolicySet[] = []
 
-  constructor ({ namespace, algorithm = 'only-one-applicable' }: TConfig) {
+  constructor ({ namespace, algorithm }: TConfig) {
     if (namespace.root !== undefined) {
       this.error('Namespace should not have a dependency')
     }
@@ -54,7 +54,7 @@ export class ABAC {
     return Context.make({ abac: this, data })
   }
 
-  static make (config: TConfig) {
+  static new (config: TConfig) {
     return new ABAC(config)
   }
 }

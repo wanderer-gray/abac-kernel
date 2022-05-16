@@ -100,7 +100,7 @@ export class Namespace {
     return func
   }
 
-  static make (config: TConfig<Namespace>) {
+  static new (config: TConfig<Namespace>) {
     return new Namespace(config)
   }
 }

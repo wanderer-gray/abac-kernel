@@ -70,7 +70,7 @@ export class Rule implements IExecute {
     }[result](namespace, context)
   }
 
-  static make (config: TConfig) {
+  static new (config: TConfig) {
     return new Rule(config)
   }
 }

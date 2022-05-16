@@ -77,7 +77,7 @@ export class Policy implements IExecute {
     }[result](namespace, context)
   }
 
-  static make (config: TConfig) {
+  static new (config: TConfig) {
     return new Policy(config)
   }
 }

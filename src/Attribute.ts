@@ -40,28 +40,20 @@ export class Attribute {
 
     for (const key of this.path) {
       if (!isObject(value)) {
-        return { ok: false, value: null }
+        return undefined
       }
 
       value = value[key]
     }
 
-    return { ok: true, value }
+    return value
   }
 
   private async getByComputer (data: TObject) {
-    const { computer } = this
-
-    if (!computer) {
-      return { ok: false, value: null }
-    }
-
     try {
-      const value = await computer(data)
-
-      return { ok: true, value }
+      return await this.computer?.(data)
     } catch {
-      return { ok: false, value: null }
+      return undefined
     }
   }
 
@@ -70,14 +62,14 @@ export class Attribute {
 
     const valueByPath = this.getByPath(data)
 
-    if (valueByPath.ok) {
-      return valueByPath.value
+    if (valueByPath !== undefined) {
+      return valueByPath
     }
 
     const valueByComputer = await this.getByComputer(data)
 
-    if (valueByComputer.ok) {
-      return valueByComputer.value
+    if (valueByComputer !== undefined) {
+      return valueByComputer
     }
 
     return null
@@ -93,7 +85,7 @@ export class Attribute {
     return value
   }
 
-  static make (config: TConfig) {
+  static new (config: TConfig) {
     return new Attribute(config)
   }
 }

@@ -67,7 +67,7 @@ export class Function {
     return result
   }
 
-  static make (config: TConfig) {
+  static new (config: TConfig) {
     return new Function(config)
   }
 }

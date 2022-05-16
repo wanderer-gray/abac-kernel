@@ -21,7 +21,7 @@ export class Condition {
     return Executor.Execute(this.code, namespace, context)
   }
 
-  static make (config: TConfig) {
+  static new (config: TConfig) {
     return new Condition(config)
   }
 }

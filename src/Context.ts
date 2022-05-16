@@ -34,7 +34,7 @@ export class Context {
       .catch(reject)
   }
 
-  static make (config: TConfig) {
+  static new (config: TConfig) {
     return new Context(config)
   }
 }
