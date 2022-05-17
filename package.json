@@ -8,10 +8,9 @@
     "/dist"
   ],
   "scripts": {
-    "start": "node dist",
-    "test": "jest",
     "build": "tsc",
     "lint": "eslint src/**",
+    "test": "jest",
     "prepare": "npm run build"
   },
   "author": "meerkat",
