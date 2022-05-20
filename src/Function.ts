@@ -17,7 +17,7 @@ type TConfig = {
 
 export class Function {
   readonly name: string
-  private readonly executor: TExecutor
+  readonly executor: TExecutor
   readonly argsSettings: TArgsSettings
   readonly resultSettings: TResultSettings
 
