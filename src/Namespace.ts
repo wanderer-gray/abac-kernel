@@ -10,20 +10,12 @@ export class Namespace {
   readonly name: string
   readonly root?: Namespace
 
-  private readonly _attributes: Map<string, Attribute> = new Map()
-  private readonly _functions: Map<string, Function> = new Map()
+  private readonly attributes: Map<string, Attribute> = new Map()
+  private readonly functions: Map<string, Function> = new Map()
 
   constructor ({ name, root }: TConfig<Namespace>) {
     this.name = name
     this.root = root
-  }
-
-  get attributes () {
-    return [...this._attributes.values()]
-  }
-
-  get functions () {
-    return [...this._functions.values()]
   }
 
   private error (message: string): never {
@@ -31,11 +23,11 @@ export class Namespace {
   }
 
   hasAttribute (name: string) {
-    return this._attributes.has(name)
+    return this.attributes.has(name)
   }
 
   hasFunction (name: string) {
-    return this._functions.has(name)
+    return this.functions.has(name)
   }
 
   hasPublicName (name: string) {
@@ -69,13 +61,13 @@ export class Namespace {
 
     this.assertPublicName(attributeName)
 
-    this._attributes.set(attributeName, attr)
+    this.attributes.set(attributeName, attr)
 
     return this
   }
 
   getAttribute (name: string): Attribute {
-    const attr = this._attributes.get(name) || this.root?.getAttribute(name)
+    const attr = this.attributes.get(name) || this.root?.getAttribute(name)
 
     if (!attr) {
       this.error(`Attribute "${name}" not found`)
@@ -93,13 +85,13 @@ export class Namespace {
 
     this.assertPublicName(functionName)
 
-    this._functions.set(functionName, func)
+    this.functions.set(functionName, func)
 
     return this
   }
 
   getFunction (name: string): Function {
-    const func = this._functions.get(name) || this.root?.getFunction(name)
+    const func = this.functions.get(name) || this.root?.getFunction(name)
 
     if (!func) {
       this.error(`Function "${name}" not found`)
