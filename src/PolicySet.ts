@@ -51,6 +51,14 @@ export class PolicySet implements IExecute {
     return this
   }
 
+  addPolicies (policies: Policy[]) {
+    for (const policy of policies) {
+      this.addPolicy(policy)
+    }
+
+    return this
+  }
+
   private handlerDeny = () => {
     return <TEffectСomplex>'none'
   }

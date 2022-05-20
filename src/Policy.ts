@@ -51,6 +51,14 @@ export class Policy implements IExecute {
     return this
   }
 
+  addRules (rules: Rule[]) {
+    for (const rule of rules) {
+      this.addRule(rule)
+    }
+
+    return this
+  }
+
   private handlerDeny = () => {
     return <TEffectСomplex>'none'
   }

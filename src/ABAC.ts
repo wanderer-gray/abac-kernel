@@ -46,6 +46,14 @@ export class ABAC {
     return this
   }
 
+  addPolicySets (policySets: PolicySet[]) {
+    for (const policySet of policySets) {
+      this.addPolicySet(policySet)
+    }
+
+    return this
+  }
+
   execute (context: Context) {
     return executeElements(this.algorithm, this.policySets, this.namespace, context)
   }
