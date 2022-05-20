@@ -20,9 +20,9 @@ type TConfig = {
 
 export class Attribute {
   readonly name: string
-  private readonly path: string[]
-  private readonly schema: TSchema
-  private readonly computer?: TComputer
+  readonly path: string[]
+  readonly schema: TSchema
+  readonly computer?: TComputer
 
   constructor ({ name, path, schema, computer }: TConfig) {
     this.name = name

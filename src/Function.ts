@@ -18,8 +18,8 @@ type TConfig = {
 export class Function {
   readonly name: string
   private readonly executor: TExecutor
-  private readonly argsSettings: TArgsSettings
-  private readonly resultSettings: TResultSettings
+  readonly argsSettings: TArgsSettings
+  readonly resultSettings: TResultSettings
 
   constructor ({ name, executor, argsSettings, resultSettings }: TConfig) {
     this.name = name
