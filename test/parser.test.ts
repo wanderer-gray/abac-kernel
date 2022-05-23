@@ -155,9 +155,20 @@ test('value string escape "Special char [/]', () => {
   })
 })
 
-test('attribute "a"', () => {
-  expect(Parser.Parse('a')).toEqual({
+test('attribute "my_attr"', () => {
+  expect(Parser.Parse('my_attr')).toEqual({
     class: 'attribute',
-    name: 'a'
+    name: 'my_attr'
+  })
+})
+
+test('attribute not support "Мой атрибут"', () => {
+  expect(() => Parser.Parse('Мой атрибут')).toThrowError(new Error('Parser: Expected ast'))
+})
+
+test('attribute support "Мой атрибут"', () => {
+  expect(Parser.Parse('"Мой атрибут"')).toEqual({
+    class: 'attribute',
+    name: 'Мой атрибут'
   })
 })
