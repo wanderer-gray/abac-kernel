@@ -1,6 +1,6 @@
 import { TAst } from './Ast'
 import { Namespace } from './Namespace'
-import { Context } from './context'
+import { Context } from './Context'
 import { Executor } from './Executor'
 
 type TConfig = {

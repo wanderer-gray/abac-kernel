@@ -5,7 +5,7 @@ import {
 } from './Effect'
 import { Condition } from './Condition'
 import { Namespace } from './Namespace'
-import { Context } from './context'
+import { Context } from './Context'
 import { IExecute } from './Algorithm'
 
 type TConfig = {

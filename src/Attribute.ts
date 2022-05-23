@@ -7,7 +7,7 @@ import {
   TSchema,
   verify
 } from './Schema'
-import { Context } from './context'
+import { Context } from './Context'
 
 type TComputer = (data: TObject) => Promise<TSupport>
 

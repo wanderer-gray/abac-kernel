@@ -2,7 +2,7 @@ import { Target } from './Target'
 import { TEffectСomplex } from './Effect'
 import { Policy } from './Policy'
 import { Namespace } from './Namespace'
-import { Context } from './context'
+import { Context } from './Context'
 import {
   IExecute,
   TAlgorithmPolicy,
