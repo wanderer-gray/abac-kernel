@@ -30,7 +30,7 @@ export class ParserValue extends ParserBase {
         const expected = ['/', sep].includes(this.peek())
 
         if (!expected) {
-          this.error(`Expected '/' or '${sep}'`)
+          this.error(`Expected [/] or [${sep}]`)
         }
       }
 
@@ -86,6 +86,12 @@ export class ParserValue extends ParserBase {
   private getNumber = () => {
     let value = ''
 
+    const sign = this.searchIText('+', '-')
+
+    if (sign === '-') {
+      value += sign
+    }
+
     for (; ;) {
       for (; isDigit(this.peek()); this.next()) {
         value += this.peek()
@@ -98,7 +104,7 @@ export class ParserValue extends ParserBase {
       value += '.'
     }
 
-    if (!value || value === '.') {
+    if (['', '-', '.', '-.'].includes(value)) {
       return null
     }
 
@@ -107,14 +113,14 @@ export class ParserValue extends ParserBase {
     return <TAstValueNumber>{
       class: 'value',
       type: 'number',
-      value: +value
+      value: +value + 0
     }
   }
 
   private getString = () => {
     const value = this.readString('\'')
 
-    if (!value) {
+    if (value === null) {
       return null
     }
 

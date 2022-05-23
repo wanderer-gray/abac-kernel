@@ -219,13 +219,19 @@ export class ParserExpression extends ParserOperand {
       return null
     }
 
-    return this.searchNode<TAstOp>(
+    const operands = this.searchNode<TAstOp>(
       this.getCmpOperand(left),
       this.getInOperands(left),
       this.getLikeOperand(left),
       this.getBetweenOperands(left),
       this.getIsNull(left)
     )
+
+    if (operands) {
+      return operands
+    }
+
+    return left
   }
 
   private getNotExpression = () => {
