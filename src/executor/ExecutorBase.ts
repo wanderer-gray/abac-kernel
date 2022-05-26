@@ -516,7 +516,7 @@ class ExecutorBase {
     }[astOp.type](astOp)
   }
 
-  protected execute (ast: TAst): TSupport | Promise<TSupport> {
+  protected execute = (ast: TAst): TSupport | Promise<TSupport> => {
     return {
       value: this.getAstValue,
       attribute: this.getAstAttribute,
