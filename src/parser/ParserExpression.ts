@@ -273,9 +273,9 @@ export class ParserExpression extends ParserOperand {
 
   private getCondition () {
     return this.searchNode(
-      this.getOperands,
       this.getNotExpression,
-      this.getGroupExpression
+      this.getGroupExpression,
+      this.getOperands
     )
   }
 
