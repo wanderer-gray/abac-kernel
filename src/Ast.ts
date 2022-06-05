@@ -2,7 +2,6 @@ import { isObject } from './Type'
 
 type TAst = {
   class: 'value' | 'attribute' | 'function' | 'op' | 'prop'
-  type: string
 }
 
 type TAstValue = TAst & {

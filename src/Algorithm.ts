@@ -223,8 +223,21 @@ function executeElements (algorithm: TAlgorithm, elements: IExecute[], namespace
   }[algorithm](elements, namespace, context)
 }
 
-function handlerError (algorithm: TAlgorithm, elements: IExecute[], namespace: Namespace, context: Context) {
-  return executeElements(algorithm, elements, namespace, context)
+async function handlerError (algorithm: TAlgorithm, elements: IExecute[], namespace: Namespace, context: Context) : Promise<TEffectСomplex> {
+  const result = await executeElements(algorithm, elements, namespace, context)
+
+  switch (result) {
+    case 'none':
+      return 'none'
+    case 'permit':
+    case 'error_p':
+      return 'error_p'
+    case 'deny':
+    case 'error_d':
+      return 'error_d'
+    case 'error_pd':
+      return 'error_pd'
+  }
 }
 
 export {
