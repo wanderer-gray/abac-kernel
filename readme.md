@@ -1,39 +1,23 @@
-# ABAC
-Project stage - prototype.
+# abac-kernel
+Ядро для разграничения прав доступа на основе атрибутной модели.
 
-## Arch
-1. ABAC
-2. PolicySet
-3. Policy
-4. Rule
-5. Condition
-6. Func
-7. Proc
-8. Context
+## Архитектура
+1. VM: Parser, Executor
+2. Attribute
+3. Function
+4. Namespace
+5. Target
+6. Condition
+7. Rule
+8. Policy
+9. PolicySet
+10. ABAC
 
-## Interaction
-- Local
-- Get (Extension)
-- Pub/Sub (Extension)
+## Интеграция
+- Клиент.
+- Сервис
+- Сервер
 
-## Converter
-AST to ...
-
-## Type
-1. null
-2. bool
-3. num
-4. str
-5. arrayOf
-6. objectOf
-7. shape
-8. exact
-9. oneOfType
-
-## VM
-1. Parser
-2. Checker
-3. Optimizer
-4. Executor
-
-## Examples
+## Список дел
+- [ ] Модули для интеграции
+- [ ] Трансляция выражений
